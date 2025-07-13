@@ -1,0 +1,376 @@
+<mujoco model="piano_with_go2_stage">
+  <compiler autolimits="true" angle="radian"/>
+  <option timestep="0.0050000000000000001" impratio="10"/>
+  <visual>
+    <global azimuth="180" elevation="-50"/>
+    <map stiffness="400"/>
+    <scale forcewidth="0.040000000000000001" contactwidth="0.20000000000000001" contactheight="0.029999999999999999"/>
+  </visual>
+  <statistic extent="0.8" center="0.2 0 0.3"/>
+  <default>
+    <default class="/"/>
+    <default class="piano/">
+      <joint type="hinge" axis="0 1 0"/>
+      <geom type="box" contype="0" conaffinity="1" solref="0.01 1"/>
+      <site type="box" group="4" rgba="1 0 0 1"/>
+      <default class="piano/white_key">
+        <joint pos="-0.074999999999999997 0 0" stiffness="2" range="0 0.066568163775823808" springref="-0.017453292519943295" armature="0.001" damping="0.050000000000000003"/>
+        <geom size="0.074999999999999997 0.01125 0.01125" material="piano/white" mass="0.040000000000000001"/>
+        <site size="0.074999999999999997 0.01125 0.01125"/>
+      </default>
+      <default class="piano/black_key">
+        <joint pos="-0.044999999999999998 0 0" stiffness="2" range="0 0.088655881867437475" springref="-0.017453292519943295" armature="0.001" damping="0.050000000000000003"/>
+        <geom size="0.044999999999999998 0.0050000000000000001 0.0089999999999999993" material="piano/black" mass="0.02"/>
+        <site size="0.044999999999999998 0.0050000000000000001 0.0089999999999999993"/>
+      </default>
+    </default>
+    
+    <!-- Go2 Robot defaults -->
+    <default class="go2">
+      <geom friction="0.6" margin="0.001" condim="1"/>
+      <joint axis="0 1 0" damping="2" armature="0.01" frictionloss="0.2"/>
+      <motor ctrlrange="-23.7 23.7"/>
+      <default class="abduction">
+        <joint axis="1 0 0" range="-1.0472 1.0472"/>
+      </default>
+      <default class="hip">
+        <default class="front_hip">
+          <joint range="-1.5708 3.4907"/>
+        </default>
+        <default class="back_hip">
+          <joint range="-0.5236 4.5379"/>
+        </default>
+      </default>
+      <default class="knee">
+        <joint range="-2.7227 -0.83776"/>
+        <motor ctrlrange="-45.43 45.43"/>
+      </default>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="collision">
+        <geom group="3"/>
+        <default class="foot">
+          <geom size="0.022" pos="-0.002 0 -0.213" priority="1" solimp="0.015 1 0.022" condim="6"
+            friction="0.8 0.02 0.01"/>
+        </default>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="skybox" type="skybox" builtin="gradient" rgb1="0.20000000000000001 0.20000000000000001 0.20000000000000001" rgb2="0 0 0" mark="random" markrgb="1 1 1" width="800" height="800"/>
+    <material name="piano/white" class="piano/" rgba="0.90000000000000002 0.90000000000000002 0.90000000000000002 1"/>
+    <material name="piano/black" class="piano/" rgba="0.10000000000000001 0.10000000000000001 0.10000000000000001 1" shininess="1" reflectance="0.2"/>
+    <material name="piano/base" class="piano/" rgba="0.1 0.1 0.1 1" shininess="1"/>
+    
+    <!-- Go2 materials -->
+    <material name="go2_metal" rgba=".9 .95 .95 1"/>
+    <material name="go2_black" rgba="0 0 0 1"/>
+    <material name="go2_white" rgba="1 1 1 1"/>
+    <material name="go2_gray" rgba="0.671705 0.692426 0.774270 1"/>
+    
+    <!-- Go2 meshes -->
+    <mesh file="assets/base_0.obj"/>
+    <mesh file="assets/base_1.obj"/>
+    <mesh file="assets/base_2.obj"/>
+    <mesh file="assets/base_3.obj"/>
+    <mesh file="assets/base_4.obj"/>
+    <mesh file="assets/hip_0.obj"/>
+    <mesh file="assets/hip_1.obj"/>
+    <mesh file="assets/thigh_0.obj"/>
+    <mesh file="assets/thigh_1.obj"/>
+    <mesh file="assets/thigh_mirror_0.obj"/>
+    <mesh file="assets/thigh_mirror_1.obj"/>
+    <mesh file="assets/calf_0.obj"/>
+    <mesh file="assets/calf_1.obj"/>
+    <mesh file="assets/calf_mirror_0.obj"/>
+    <mesh file="assets/calf_mirror_1.obj"/>
+    <mesh file="assets/foot.obj"/>
+    
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".1 .1 .1" rgb2=".2 .2 .2"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
+  </asset>
+  <worldbody>
+    <light name="//unnamed_light_0" class="/" pos="0 0 1"/>
+    <light name="//unnamed_light_1" class="/" directional="false" pos="0.29999999999999999 0 1" dir="0 0 -1"/>
+    <geom name="floor" size="0 0 .05" type="plane" material="grid" class="/" contype="0" conaffinity="0"/>
+    
+    <!-- Piano -->
+    <body name="piano/">
+      <body name="piano/base" pos="-0.127 0 0.02">
+        <geom name="piano//unnamed_geom_0" class="piano/" type="box" size="0.050000000000000003 0.61049999999999993 0.02" material="piano/base"/>
+      </body>
+
+      <!-- Piano keys - keeping a subset for demonstration -->
+      <body name="piano/white_key_0" pos="0 -0.2 0.01125">
+        <geom name="piano/white_key_geom_0" class="piano/white_key"/>
+        <joint name="piano/white_joint_0" class="piano/white_key"/>
+        <site name="piano/white_key_site_0" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_1" pos="-0.029999999999999999 -0.18 0.026000000000000002">
+        <geom name="piano/black_key_geom_1" class="piano/black_key"/>
+        <joint name="piano/black_joint_1" class="piano/black_key"/>
+        <site name="piano/black_key_site_1" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_2" pos="0 -0.16 0.01125">
+        <geom name="piano/white_key_geom_2" class="piano/white_key"/>
+        <joint name="piano/white_joint_2" class="piano/white_key"/>
+        <site name="piano/white_key_site_2" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_3" pos="0 -0.14 0.01125">
+        <geom name="piano/white_key_geom_3" class="piano/white_key"/>
+        <joint name="piano/white_joint_3" class="piano/white_key"/>
+        <site name="piano/white_key_site_3" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_4" pos="0 -0.12 0.01125">
+        <geom name="piano/white_key_geom_4" class="piano/white_key"/>
+        <joint name="piano/white_joint_4" class="piano/white_key"/>
+        <site name="piano/white_key_site_4" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_5" pos="0 -0.10 0.01125">
+        <geom name="piano/white_key_geom_5" class="piano/white_key"/>
+        <joint name="piano/white_joint_5" class="piano/white_key"/>
+        <site name="piano/white_key_site_5" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_6" pos="0 -0.08 0.01125">
+        <geom name="piano/white_key_geom_6" class="piano/white_key"/>
+        <joint name="piano/white_joint_6" class="piano/white_key"/>
+        <site name="piano/white_key_site_6" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_7" pos="0 -0.06 0.01125">
+        <geom name="piano/white_key_geom_7" class="piano/white_key"/>
+        <joint name="piano/white_joint_7" class="piano/white_key"/>
+        <site name="piano/white_key_site_7" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_8" pos="0 -0.04 0.01125">
+        <geom name="piano/white_key_geom_8" class="piano/white_key"/>
+        <joint name="piano/white_joint_8" class="piano/white_key"/>
+        <site name="piano/white_key_site_8" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_9" pos="0 -0.02 0.01125">
+        <geom name="piano/white_key_geom_9" class="piano/white_key"/>
+        <joint name="piano/white_joint_9" class="piano/white_key"/>
+        <site name="piano/white_key_site_9" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_10" pos="0 0.0 0.01125">
+        <geom name="piano/white_key_geom_10" class="piano/white_key"/>
+        <joint name="piano/white_joint_10" class="piano/white_key"/>
+        <site name="piano/white_key_site_10" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_11" pos="0 0.02 0.01125">
+        <geom name="piano/white_key_geom_11" class="piano/white_key"/>
+        <joint name="piano/white_joint_11" class="piano/white_key"/>
+        <site name="piano/white_key_site_11" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_12" pos="0 0.04 0.01125">
+        <geom name="piano/white_key_geom_12" class="piano/white_key"/>
+        <joint name="piano/white_joint_12" class="piano/white_key"/>
+        <site name="piano/white_key_site_12" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_13" pos="0 0.06 0.01125">
+        <geom name="piano/white_key_geom_13" class="piano/white_key"/>
+        <joint name="piano/white_joint_13" class="piano/white_key"/>
+        <site name="piano/white_key_site_13" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_14" pos="0 0.08 0.01125">
+        <geom name="piano/white_key_geom_14" class="piano/white_key"/>
+        <joint name="piano/white_joint_14" class="piano/white_key"/>
+        <site name="piano/white_key_site_14" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_15" pos="0 0.10 0.01125">
+        <geom name="piano/white_key_geom_15" class="piano/white_key"/>
+        <joint name="piano/white_joint_15" class="piano/white_key"/>
+        <site name="piano/white_key_site_15" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_16" pos="0 0.12 0.01125">
+        <geom name="piano/white_key_geom_16" class="piano/white_key"/>
+        <joint name="piano/white_joint_16" class="piano/white_key"/>
+        <site name="piano/white_key_site_16" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_17" pos="0 0.14 0.01125">
+        <geom name="piano/white_key_geom_17" class="piano/white_key"/>
+        <joint name="piano/white_joint_17" class="piano/white_key"/>
+        <site name="piano/white_key_site_17" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_18" pos="0 0.16 0.01125">
+        <geom name="piano/white_key_geom_18" class="piano/white_key"/>
+        <joint name="piano/white_joint_18" class="piano/white_key"/>
+        <site name="piano/white_key_site_18" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_19" pos="0 0.18 0.01125">
+        <geom name="piano/white_key_geom_19" class="piano/white_key"/>
+        <joint name="piano/white_joint_19" class="piano/white_key"/>
+        <site name="piano/white_key_site_19" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_20" pos="0 0.20 0.01125">
+        <geom name="piano/white_key_geom_20" class="piano/white_key"/>
+        <joint name="piano/white_joint_20" class="piano/white_key"/>
+        <site name="piano/white_key_site_20" class="piano/white_key"/>
+      </body>
+
+      <!-- Piano cameras -->
+      <camera name="piano/closeup" class="piano/" pos="-0.313 0.024 0.45500000000000002" xyaxes="0.0030000000000000001 -1 -0 0.60699999999999998 0.002 0.79500000000000004"/>
+      <camera name="piano/left" class="piano/" pos="0.39300000000000002 -0.79100000000000004 0.63800000000000001" xyaxes="0.80800000000000005 0.58899999999999997 0 -0.38800000000000001 0.53300000000000003 0.752"/>
+      <camera name="piano/right" class="piano/" pos="0.47199999999999998 0.59799999999999998 0.57999999999999996" xyaxes="-0.63700000000000001 0.77100000000000002 -0 -0.51000000000000001 -0.42099999999999999 0.75"/>
+      <camera name="piano/back" class="piano/" pos="-0.56899999999999995 0.0080000000000000002 0.84099999999999997" xyaxes="-0.0089999999999999993 -1 0 0.78300000000000003 -0.0070000000000000001 0.622"/>
+      <camera name="piano/egocentric" class="piano/" pos="0.41699999999999998 -0.039 0.71699999999999997" xyaxes="-0.002 1 0 -0.86699999999999999 -0.002 0.498"/>
+      <camera name="piano/topdown" class="piano/" fovy="33.9496196739872" pos="0 0 1" quat="1 0 0 1"/>
+    </body>
+    
+    <!-- Unitree Go2 Robot positioned to play piano -->
+    <body name="go2_base" pos="0.25 0 0.232" quat="1 0 0 0" childclass="go2">
+      <inertial pos="0.021112 0 -0.005366" quat="-0.000543471 0.713435 -0.00173769 0.700719" mass="6.921"
+        diaginertia="0.107027 0.0980771 0.0244531"/>
+      <geom mesh="base_0" material="go2_black" class="visual"/>
+      <geom mesh="base_1" material="go2_black" class="visual"/>
+      <geom mesh="base_2" material="go2_black" class="visual"/>
+      <geom mesh="base_3" material="go2_white" class="visual"/>
+      <geom mesh="base_4" material="go2_gray" class="visual"/>
+      <geom size="0.1881 0.04675 0.057" type="box" class="collision"/>
+      <geom size="0.05 0.045" pos="0.285 0 0.01" type="cylinder" class="collision"/>
+      <geom size="0.047" pos="0.293 0 -0.06" class="collision"/>
+      <site name="go2_imu" pos="-0.02557 0 0.04232"/>
+      
+      <!-- Front Left Leg -->
+      <body name="go2_FL_hip" pos="0.1934 0.0465 0">
+        <inertial pos="-0.0054 0.00194 -0.000105" quat="0.497014 0.499245 0.505462 0.498237" mass="0.678"
+          diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="go2_FL_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2_metal" class="visual"/>
+        <geom mesh="hip_1" material="go2_gray" class="visual"/>
+        <geom size="0.046 0.02" pos="0 0.08 0" quat="1 1 0 0" type="cylinder" class="collision"/>
+        <body name="go2_FL_thigh" pos="0 0.0955 0">
+          <inertial pos="-0.00374 -0.0223 -0.0327" quat="0.829533 0.0847635 -0.0200632 0.551623" mass="1.152"
+            diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="go2_FL_thigh_joint" class="front_hip"/>
+          <geom mesh="thigh_0" material="go2_metal" class="visual"/>
+          <geom mesh="thigh_1" material="go2_gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="go2_FL_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 -0.000622121 -0.141417" quat="0.710672 0.00154099 -0.00450087 0.703508"
+              mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="go2_FL_calf_joint" class="knee"/>
+            <geom mesh="calf_0" material="go2_gray" class="visual"/>
+            <geom mesh="calf_1" material="go2_black" class="visual"/>
+            <geom size="0.012 0.06" pos="0.008 0 -0.06" quat="0.994493 0 -0.104807 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2_black"/>
+            <geom name="go2_FL" class="foot" contype="1" conaffinity="1"/>
+            <site name="go2_FL_paw" pos="0 0 -0.213" size="0.02" rgba="1 0 0 0.5"/>
+          </body>
+        </body>
+      </body>
+      
+      <!-- Front Right Leg -->
+      <body name="go2_FR_hip" pos="0.1934 -0.0465 0">
+        <inertial pos="-0.0054 -0.00194 -0.000105" quat="0.498237 0.505462 0.499245 0.497014" mass="0.678"
+          diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="go2_FR_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2_metal" class="visual" quat="4.63268e-05 1 0 0"/>
+        <geom mesh="hip_1" material="go2_gray" class="visual" quat="4.63268e-05 1 0 0"/>
+        <geom size="0.046 0.02" pos="0 -0.08 0" quat="0.707107 0.707107 0 0" type="cylinder" class="collision"/>
+        <body name="go2_FR_thigh" pos="0 -0.0955 0">
+          <inertial pos="-0.00374 0.0223 -0.0327" quat="0.551623 -0.0200632 0.0847635 0.829533" mass="1.152"
+            diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="go2_FR_thigh_joint" class="front_hip"/>
+          <geom mesh="thigh_mirror_0" material="go2_metal" class="visual"/>
+          <geom mesh="thigh_mirror_1" material="go2_gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="go2_FR_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 0.000622121 -0.141417" quat="0.703508 -0.00450087 0.00154099 0.710672"
+              mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="go2_FR_calf_joint" class="knee"/>
+            <geom mesh="calf_mirror_0" material="go2_gray" class="visual"/>
+            <geom mesh="calf_mirror_1" material="go2_black" class="visual"/>
+            <geom size="0.013 0.06" pos="0.01 0 -0.06" quat="0.995004 0 -0.0998334 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2_black"/>
+            <geom name="go2_FR" class="foot" contype="1" conaffinity="1"/>
+            <site name="go2_FR_paw" pos="0 0 -0.213" size="0.02" rgba="1 0 0 0.5"/>
+          </body>
+        </body>
+      </body>
+      
+      <!-- Rear Left Leg -->
+      <body name="go2_RL_hip" pos="-0.1934 0.0465 0">
+        <inertial pos="0.0054 0.00194 -0.000105" quat="0.505462 0.498237 0.497014 0.499245" mass="0.678"
+          diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="go2_RL_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2_metal" class="visual" quat="4.63268e-05 0 1 0"/>
+        <geom mesh="hip_1" material="go2_gray" class="visual" quat="4.63268e-05 0 1 0"/>
+        <geom size="0.046 0.02" pos="0 0.08 0" quat="0.707107 0.707107 0 0" type="cylinder" class="collision"/>
+        <body name="go2_RL_thigh" pos="0 0.0955 0">
+          <inertial pos="-0.00374 -0.0223 -0.0327" quat="0.829533 0.0847635 -0.0200632 0.551623" mass="1.152"
+            diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="go2_RL_thigh_joint" class="back_hip"/>
+          <geom mesh="thigh_0" material="go2_metal" class="visual"/>
+          <geom mesh="thigh_1" material="go2_gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="go2_RL_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 -0.000622121 -0.141417" quat="0.710672 0.00154099 -0.00450087 0.703508"
+              mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="go2_RL_calf_joint" class="knee"/>
+            <geom mesh="calf_0" material="go2_gray" class="visual"/>
+            <geom mesh="calf_1" material="go2_black" class="visual"/>
+            <geom size="0.013 0.06" pos="0.01 0 -0.06" quat="0.995004 0 -0.0998334 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2_black"/>
+            <geom name="go2_RL" class="foot" contype="1" conaffinity="0"/>
+            <site name="go2_RL_paw" pos="0 0 -0.213" size="0.02" rgba="0 1 0 0.5"/>
+          </body>
+        </body>
+      </body>
+      
+      <!-- Rear Right Leg -->
+      <body name="go2_RR_hip" pos="-0.1934 -0.0465 0">
+        <inertial pos="0.0054 -0.00194 -0.000105" quat="0.499245 0.497014 0.498237 0.505462" mass="0.678"
+          diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="go2_RR_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2_metal" class="visual" quat="2.14617e-09 4.63268e-05 4.63268e-05 -1"/>
+        <geom mesh="hip_1" material="go2_gray" class="visual" quat="2.14617e-09 4.63268e-05 4.63268e-05 -1"/>
+        <geom size="0.046 0.02" pos="0 -0.08 0" quat="0.707107 0.707107 0 0" type="cylinder" class="collision"/>
+        <body name="go2_RR_thigh" pos="0 -0.0955 0">
+          <inertial pos="-0.00374 0.0223 -0.0327" quat="0.551623 -0.0200632 0.0847635 0.829533" mass="1.152"
+            diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="go2_RR_thigh_joint" class="back_hip"/>
+          <geom mesh="thigh_mirror_0" material="go2_metal" class="visual"/>
+          <geom mesh="thigh_mirror_1" material="go2_gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="go2_RR_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 0.000622121 -0.141417" quat="0.703508 -0.00450087 0.00154099 0.710672"
+              mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="go2_RR_calf_joint" class="knee"/>
+            <geom mesh="calf_mirror_0" material="go2_gray" class="visual"/>
+            <geom mesh="calf_mirror_1" material="go2_black" class="visual"/>
+            <geom size="0.013 0.06" pos="0.01 0 -0.06" quat="0.995004 0 -0.0998334 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2_black"/>
+            <geom name="go2_RR" class="foot" contype="1" conaffinity="0"/>
+            <site name="go2_RR_paw" pos="0 0 -0.213" size="0.02" rgba="0 1 0 0.5"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  
+  <actuator>
+    <!-- Go2 Robot Actuators -->
+    <motor class="abduction" name="go2_FL_hip" joint="go2_FL_hip_joint"/>
+    <motor class="hip" name="go2_FL_thigh" joint="go2_FL_thigh_joint"/>
+    <motor class="knee" name="go2_FL_calf" joint="go2_FL_calf_joint"/>
+    <motor class="abduction" name="go2_FR_hip" joint="go2_FR_hip_joint"/>
+    <motor class="hip" name="go2_FR_thigh" joint="go2_FR_thigh_joint"/>
+    <motor class="knee" name="go2_FR_calf" joint="go2_FR_calf_joint"/>
+    <motor class="abduction" name="go2_RL_hip" joint="go2_RL_hip_joint"/>
+    <motor class="hip" name="go2_RL_thigh" joint="go2_RL_thigh_joint"/>
+    <motor class="knee" name="go2_RL_calf" joint="go2_RL_calf_joint"/>
+    <motor class="abduction" name="go2_RR_hip" joint="go2_RR_hip_joint"/>
+    <motor class="hip" name="go2_RR_thigh" joint="go2_RR_thigh_joint"/>
+    <motor class="knee" name="go2_RR_calf" joint="go2_RR_calf_joint"/>
+  </actuator>
+  
+  <keyframe>
+    <key name="go2_piano_stance"
+         qpos="0.3 0.8 -1.6 0.3 0.8 -1.6 -0.5 -0.5 1.0 -0.5 -0.5 1.0"/>
+  </keyframe>
+</mujoco>
