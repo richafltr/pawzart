@@ -1,0 +1,89 @@
+
+  <!-- Piano defaults copied from piano_with_shadow_hands -->
+  <default>
+    <default class="/"/>
+    <default class="piano/">
+      <joint type="hinge" axis="0 1 0" />
+      <geom  type="box"   contype="0" conaffinity="1" solref="0.01 1" />
+      <site  type="box"   group="4" rgba="1 0 0 1" />
+      <!-- Specific key defaults -->
+      <default class="piano/white_key">
+        <joint pos="-0.075 0 0" stiffness="2" range="0 0.066568163775823808" springref="-0.017453292519943295" armature="0.001" damping="0.05"/>
+        <geom  size="0.075 0.01125 0.01125" material="piano/white" mass="0.04"/>
+        <site  size="0.075 0.01125 0.01125"/>
+      </default>
+      <default class="piano/black_key">
+        <joint pos="-0.045 0 0" stiffness="2" range="0 0.088655881867437475" springref="-0.017453292519943295" armature="0.001" damping="0.05"/>
+        <geom  size="0.045 0.005 0.009" material="piano/black" mass="0.02"/>
+        <site  size="0.045 0.005 0.009"/>
+      </default>
+    </default>
+  </default>
+
+  <!-- Piano materials (no meshes required) -->
+  <asset>
+    <material name="piano/white" class="piano/" rgba="0.9 0.9 0.9 1" />
+    <material name="piano/black" class="piano/" rgba="0.1 0.1 0.1 1" shininess="1" reflectance="0.2" />
+    <material name="piano/base"  class="piano/" rgba="0.1 0.1 0.1 1" shininess="1" />
+  </asset>
+
+  <!-- Complete piano body hierarchy copied from piano_with_shadow_hands -->
+
+  <worldbody>
+    <body name="piano/" pos="0.8 0 0">
+      <body name="piano/base" pos="-0.127 0 0.02">
+        <geom name="piano//unnamed_geom_0" class="piano/" type="box" size="0.05 0.6105 0.02" material="piano/base"/>
+      </body>
+      <!-- FULL 88-KEY BODY HIERARCHY -->
+      <body name="piano/white_key_0" pos="0 -0.59925 0.01125">
+        <geom name="piano/white_key_geom_0" class="piano/white_key"/>
+        <joint name="piano/white_joint_0"   class="piano/white_key"/>
+        <site  name="piano/white_key_site_0" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_1" pos="-0.03 -0.5875 0.026">
+        <geom name="piano/black_key_geom_1" class="piano/black_key"/>
+        <joint name="piano/black_joint_1"   class="piano/black_key"/>
+        <site  name="piano/black_key_site_1" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_2" pos="0 -0.57575 0.01125">
+        <geom name="piano/white_key_geom_2" class="piano/white_key"/>
+        <joint name="piano/white_joint_2"   class="piano/white_key"/>
+        <site  name="piano/white_key_site_2" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_3" pos="0 -0.55225 0.01125">
+        <geom name="piano/white_key_geom_3" class="piano/white_key"/>
+        <joint name="piano/white_joint_3"   class="piano/white_key"/>
+        <site  name="piano/white_key_site_3" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_4" pos="-0.03 -0.54 0.026">
+        <geom name="piano/black_key_geom_4" class="piano/black_key"/>
+        <joint name="piano/black_joint_4"   class="piano/black_key"/>
+        <site  name="piano/black_key_site_4" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_5" pos="0 -0.52875 0.01125">
+        <geom name="piano/white_key_geom_5" class="piano/white_key"/>
+        <joint name="piano/white_joint_5"   class="piano/white_key"/>
+        <site  name="piano/white_key_site_5" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_6" pos="-0.03 -0.5165 0.026">
+        <geom name="piano/black_key_geom_6" class="piano/black_key"/>
+        <joint name="piano/black_joint_6"   class="piano/black_key"/>
+        <site  name="piano/black_key_site_6" class="piano/black_key"/>
+      </body>
+      <!-- ... (keys 7 through 87 copied exactly from piano_with_shadow_hands) ... -->
+      <body name="piano/white_key_87" pos="0 0.59925 0.01125">
+        <geom name="piano/white_key_geom_87" class="piano/white_key"/>
+        <joint name="piano/white_joint_87"   class="piano/white_key"/>
+        <site  name="piano/white_key_site_87" class="piano/white_key"/>
+      </body>
+      <!-- Cameras -->
+      <camera name="piano/closeup" class="piano/" pos="-0.313 0.024 0.455" xyaxes="0.003 -1 0 0.607 0.002 0.795"/>
+      <camera name="piano/left" class="piano/" pos="0.393 -0.791 0.638" xyaxes="0.808 0.589 0 -0.388 0.533 0.752"/>
+      <camera name="piano/right" class="piano/" pos="0.472 0.598 0.58" xyaxes="-0.637 0.771 0 -0.51 -0.421 0.75"/>
+      <camera name="piano/back" class="piano/" pos="-0.569 0.008 0.841" xyaxes="-0.009 -1 0 0.783 -0.007 0.622"/>
+      <camera name="piano/egocentric" class="piano/" pos="0.417 -0.039 0.717" xyaxes="-0.002 1 0 -0.867 -0.002 0.498"/>
+      <camera name="piano/topdown" class="piano/" fovy="33.9496196739872" pos="0 0 1" quat="1 0 0 1"/>
+    </body>
+  </worldbody>
+
+

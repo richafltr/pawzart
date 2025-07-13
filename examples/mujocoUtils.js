@@ -10,9 +10,10 @@ export async function reloadFunc() {
   // Reset piano key activations.
   this.prevActivated.fill(false);
   // Reset camera position based on scene
-  if (this.params.scene.includes("piano_with_go2")) {
-    this.camera.position.set(1.2, 1.0, 0.8);
-    this.controls.target.set(0.4, 0, 0.3);
+  if (this.params.scene === "paws_with_piano/scene.xml") {
+    this.camera.frustum.near = 0.01;
+    this.camera.frustum.far = 100;
+    this.functions.setCamera('paws_and_piano_cam');
   } else if (this.params.scene.includes("piano")) {
     this.camera.position.set(-0.41, 0.77, -0.75);
     this.controls.target.set(0.08, -0.01, -0.05);
@@ -35,7 +36,8 @@ export function setupGUI(parentContext) {
   parentContext.gui.add(parentContext.params, 'scene', {
     "Piano with Hands": "piano_with_shadow_hands/scene.xml",
     "Unitree Go2 Robot": "unitree_go2/scene.xml",
-    "Piano + Go2 Combined": "piano_with_go2/scene.xml"
+    "Paws with Piano": "paws_with_piano/scene.xml",
+
   }).name('Scene').onChange((value) => {
     reloadFunc.call(parentContext);
   });
@@ -48,13 +50,7 @@ export function setupGUI(parentContext) {
     "Nocturne Op. 9 No. 2": "nocturne_actions.npy",
     "Twinkle Twinkle": "twinkle_twinkle_actions.npy",
   }).name('Song').onChange((value) => {
-    // Determine which directory to load from based on current scene
-    let songDir = "piano_with_shadow_hands";
-    if (parentContext.params.scene && parentContext.params.scene.includes("piano_with_go2")) {
-      songDir = "piano_with_go2";
-    }
-    
-    parentContext.npyjs.load("./examples/scenes/"+songDir+"/"+value, (loaded) => {
+    parentContext.npyjs.load("./examples/scenes/piano_with_shadow_hands/"+value, (loaded) => {
       parentContext.pianoControl = loaded;
       parentContext.controlFrameNumber = 0;
       parentContext.simulation.resetData();
@@ -560,43 +556,25 @@ export async function downloadExampleScenesFolder(mujoco) {
     "unitree_go2/assets/calf_mirror_0.obj",
     "unitree_go2/assets/calf_mirror_1.obj",
     "unitree_go2/assets/foot.obj",
-    // Add combined scene assets
-    "piano_with_go2/scene.xml",
-    "piano_with_go2/f_distal_pst-927e7e0da0ee76e69c0444b22bade45ff20ab5ee.obj",
-    "piano_with_go2/f_knuckle-4e74747ced8908917157e00df691de5cfc71808c.obj",
-    "piano_with_go2/f_middle-c817011a5fccb8dac0f3201f10aa30ffa74db8b6.obj",
-    "piano_with_go2/f_proximal-2b944834ac12ce9bb152073bce3db339405bc76d.obj",
-    "piano_with_go2/forearm_0-20abf0e17ef9afc17a625f75fc0ad21f31b2ff9a.obj",
-    "piano_with_go2/forearm_1-f5b8ac92a6e1b0a6b27c50dac2004867e6c0fb5b.obj",
-    "piano_with_go2/forearm_collision-3ef43cdb2273599be12fc3270639b8782c869cb4.obj",
-    "piano_with_go2/lf_metacarpal-43a8cbd60c754686e733e10c0c28ff082b46a917.obj",
-    "piano_with_go2/palm-20de86ceb3b063e7ca1bf25fa6ddd07c068d6a70.obj",
-    "piano_with_go2/th_distal_pst-c003d5be2d6a841babda3d88c51010617a2ba4bb.obj",
-    "piano_with_go2/th_middle-c6937ecc6bf6b01a854aaffb71f3beeda05f8ac3.obj",
-    "piano_with_go2/th_proximal-836fc483b89bf08806ab50636ab1fe738a54406e.obj",
-    "piano_with_go2/wrist-87545134a753f219a1f55310cc200489b3a03c47.obj",
-    "piano_with_go2/fur_elise_actions.npy",
-    "piano_with_go2/k545_actions.npy",
-    "piano_with_go2/nocturne_actions.npy",
-    "piano_with_go2/turkish_march_actions.npy",
-    "piano_with_go2/twinkle_twinkle_actions.npy",
-    // Go2 assets in combined scene
-    "piano_with_go2/assets/base_0.obj",
-    "piano_with_go2/assets/base_1.obj",
-    "piano_with_go2/assets/base_2.obj",
-    "piano_with_go2/assets/base_3.obj",
-    "piano_with_go2/assets/base_4.obj",
-    "piano_with_go2/assets/hip_0.obj",
-    "piano_with_go2/assets/hip_1.obj",
-    "piano_with_go2/assets/thigh_0.obj",
-    "piano_with_go2/assets/thigh_1.obj",
-    "piano_with_go2/assets/thigh_mirror_0.obj",
-    "piano_with_go2/assets/thigh_mirror_1.obj",
-    "piano_with_go2/assets/calf_0.obj",
-    "piano_with_go2/assets/calf_1.obj",
-    "piano_with_go2/assets/calf_mirror_0.obj",
-    "piano_with_go2/assets/calf_mirror_1.obj",
-    "piano_with_go2/assets/foot.obj"
+    // Add Paws with Piano scene
+    "paws_with_piano/scene.xml",
+    "paws_with_piano/assets/base_0.obj",
+    "paws_with_piano/assets/base_1.obj",
+    "paws_with_piano/assets/base_2.obj",
+    "paws_with_piano/assets/base_3.obj",
+    "paws_with_piano/assets/base_4.obj",
+    "paws_with_piano/assets/hip_0.obj",
+    "paws_with_piano/assets/hip_1.obj",
+    "paws_with_piano/assets/thigh_0.obj",
+    "paws_with_piano/assets/thigh_1.obj",
+    "paws_with_piano/assets/thigh_mirror_0.obj",
+    "paws_with_piano/assets/thigh_mirror_1.obj",
+    "paws_with_piano/assets/calf_0.obj",
+    "paws_with_piano/assets/calf_1.obj",
+    "paws_with_piano/assets/calf_mirror_0.obj",
+    "paws_with_piano/assets/calf_mirror_1.obj",
+    "paws_with_piano/assets/foot.obj",
+
   ];
 
   let requests = allFiles.map((url) => fetch("./examples/scenes/" + url));

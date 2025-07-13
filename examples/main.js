@@ -26,7 +26,7 @@ export class RoboPianistDemo {
 
     // Define Random State Variables
     this.params = { 
-      scene: "piano_with_shadow_hands/scene.xml",
+      scene: "paws_with_piano/scene.xml",
       song: "turkish_march_actions.npy", 
       paused: false, 
       songPaused: false, 
@@ -128,13 +128,7 @@ export class RoboPianistDemo {
     setupGUI(this);
 
     this.npyjs = new npyjs();
-    // Determine which directory to load from based on current scene
-    let songDir = "piano_with_shadow_hands";
-    if (this.params.scene && this.params.scene.includes("piano_with_go2")) {
-      songDir = "piano_with_go2";
-    }
-    
-    this.npyjs.load("./examples/scenes/"+songDir+"/"+this.params.song, (loaded) => {
+    this.npyjs.load("./examples/scenes/piano_with_shadow_hands/"+this.params.song, (loaded) => {
       this.pianoControl = loaded;
       this.controlFrameNumber = 0;
     });

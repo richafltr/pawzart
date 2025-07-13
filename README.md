@@ -155,9 +155,8 @@ pawzart/
 │   │   │   └── *.npy               # Control sequences
 │   │   ├── unitree_go2/                 # Quadruped robot scene
 │   │   │   ├── scene.xml
-│   │   │   ├── go2.xml
 │   │   │   └── assets/             # Robot mesh files
-│   │   └── piano_with_go2/              # 🆕 Combined scene
+│   │   └── paws_with_piano/              # 🆕 Combined scene
 │   │       └── scene.xml           # Multi-robot configuration
 │   └── utils/                     # Utility modules
 ├── dist/                          # Compiled MuJoCo WASM

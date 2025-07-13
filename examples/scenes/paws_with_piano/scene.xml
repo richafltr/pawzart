@@ -1,0 +1,697 @@
+
+<mujoco model="paws_with_piano">
+  <!-- Visual settings -->
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="-130" elevation="-20"/>
+  </visual>
+
+  <statistic center="0 0 0.1" extent="1"/>
+
+  <option gravity="0 0 -9.81" timestep="0.002" integrator="RK4"/>
+
+  <!-- Compiler and assets directory -->
+  <compiler angle="radian" meshdir="../unitree_go2/assets" autolimits="true"/>
+
+  <!-- Default settings for piano and robot -->
+  <default>
+    <!-- Piano defaults -->
+    <default class="piano/">
+      <joint type="hinge" axis="0 1 0"/>
+      <geom type="box" contype="0" conaffinity="1" solref="0.01 1"/>
+      <site type="box" group="4" rgba="1 0 0 1"/>
+      <default class="piano/white_key">
+        <joint pos="-0.075 0 0" stiffness="2" range="0 0.066" springref="-0.017" armature="0.001" damping="0.05"/>
+        <geom size="0.075 0.01125 0.01125" material="piano/white" mass="0.04"/>
+        <site size="0.075 0.01125 0.01125"/>
+      </default>
+      <default class="piano/black_key">
+        <joint pos="-0.045 0 0" stiffness="2" range="0 0.088" springref="-0.017" armature="0.001" damping="0.05"/>
+        <geom size="0.045 0.005 0.009" material="piano/black" mass="0.02"/>
+        <site size="0.045 0.005 0.009"/>
+      </default>
+    </default>
+
+    <!-- Go2 defaults -->
+    <default class="go2">
+      <geom friction="0.6" margin="0.001" condim="1"/>
+      <joint axis="0 1 0" damping="2" armature="0.01" frictionloss="0.2"/>
+      <motor ctrlrange="-23.7 23.7"/>
+      <default class="abduction">
+        <joint axis="1 0 0" range="-1.0472 1.0472"/>
+      </default>
+      <default class="hip">
+        <default class="front_hip">
+          <joint range="-1.5708 3.4907"/>
+        </default>
+        <default class="back_hip">
+          <joint range="-0.5236 4.5379"/>
+        </default>
+      </default>
+      <default class="knee">
+        <joint range="-2.7227 -0.83776"/>
+        <motor ctrlrange="-45.43 45.43"/>
+      </default>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="collision">
+        <geom group="3"/>
+      </default>
+      <default class="foot">
+        <geom size="0.022" pos="-0.002 0 -0.213" priority="1" solimp="0.015 1 0.022" condim="6" friction="0.8 0.02 0.01"/>
+      </default>
+    </default>
+  </default>
+
+
+  <asset>
+    <!-- Go2 materials and meshes -->
+    <material name="go2/metal" rgba=".9 .95 .95 1"/>
+    <material name="go2/black" rgba="0 0 0 1"/>
+    <material name="go2/white" rgba="1 1 1 1"/>
+    <material name="go2/gray" rgba="0.671705 0.692426 0.774270 1"/>
+    <mesh file="base_0.obj"/>
+    <mesh file="base_1.obj"/>
+    <mesh file="base_2.obj"/>
+    <mesh file="base_3.obj"/>
+    <mesh file="base_4.obj"/>
+    <mesh file="hip_0.obj"/>
+    <mesh file="hip_1.obj"/>
+    <mesh file="thigh_0.obj"/>
+    <mesh file="thigh_1.obj"/>
+    <mesh file="thigh_mirror_0.obj"/>
+    <mesh file="thigh_mirror_1.obj"/>
+    <mesh file="calf_0.obj"/>
+    <mesh file="calf_1.obj"/>
+    <mesh file="calf_mirror_0.obj"/>
+    <mesh file="calf_mirror_1.obj"/>
+    <mesh file="foot.obj"/>
+
+    <!-- Piano and environment materials -->
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="piano/white" class="piano/" rgba="0.9 0.9 0.9 1"/>
+    <material name="piano/black" class="piano/" rgba="0.1 0.1 0.1 1" shininess="1" reflectance="0.2"/>
+    <material name="piano/base" class="piano/" rgba="0.1 0.1 0.1 1" shininess="1"/>
+  </asset>
+
+  <!-- World body -->
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+    <camera name="paws_and_piano_cam" pos="1.5 0 0.75" xyaxes="0 -1 0 0.33 0 1"/>
+
+    <!-- Go2 robot body -->
+    <body name="base" pos="0 0 0.445" childclass="go2">
+      <inertial pos="0.021112 0 -0.005366" quat="-0.000543471 0.713435 -0.00173769 0.700719" mass="6.921" diaginertia="0.107027 0.0980771 0.0244531"/>
+      <freejoint/>
+      <geom mesh="base_0" material="go2/black" class="visual"/>
+      <geom mesh="base_1" material="go2/black" class="visual"/>
+      <geom mesh="base_2" material="go2/black" class="visual"/>
+      <geom mesh="base_3" material="go2/white" class="visual"/>
+      <geom mesh="base_4" material="go2/gray" class="visual"/>
+      <geom size="0.1881 0.04675 0.057" type="box" class="collision"/>
+      <geom size="0.05 0.045" pos="0.285 0 0.01" type="cylinder" class="collision"/>
+      <geom size="0.047" pos="0.293 0 -0.06" class="collision"/>
+      <site name="imu" pos="-0.02557 0 0.04232"/>
+      <body name="FL_hip" pos="0.1934 0.0465 0">
+        <inertial pos="-0.0054 0.00194 -0.000105" quat="0.497014 0.499245 0.505462 0.498237" mass="0.678" diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="FL_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2/metal" class="visual"/>
+        <geom mesh="hip_1" material="go2/gray" class="visual"/>
+        <geom size="0.046 0.02" pos="0 0.08 0" quat="1 1 0 0" type="cylinder" class="collision"/>
+        <body name="FL_thigh" pos="0 0.0955 0">
+          <inertial pos="-0.00374 -0.0223 -0.0327" quat="0.829533 0.0847635 -0.0200632 0.551623" mass="1.152" diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="FL_thigh_joint" class="front_hip"/>
+          <geom mesh="thigh_0" material="go2/metal" class="visual"/>
+          <geom mesh="thigh_1" material="go2/gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="FL_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 -0.000622121 -0.141417" quat="0.710672 0.00154099 -0.00450087 0.703508" mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="FL_calf_joint" class="knee"/>
+            <geom mesh="calf_0" material="go2/gray" class="visual"/>
+            <geom mesh="calf_1" material="go2/black" class="visual"/>
+            <geom size="0.012 0.06" pos="0.008 0 -0.06" quat="0.994493 0 -0.104807 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2/black"/>
+            <geom name="FL" class="foot"/>
+          </body>
+        </body>
+      </body>
+      <body name="FR_hip" pos="0.1934 -0.0465 0">
+        <inertial pos="-0.0054 -0.00194 -0.000105" quat="0.498237 0.505462 0.499245 0.497014" mass="0.678" diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="FR_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2/metal" class="visual" quat="4.63268e-05 1 0 0"/>
+        <geom mesh="hip_1" material="go2/gray" class="visual" quat="4.63268e-05 1 0 0"/>
+        <geom size="0.046 0.02" pos="0 -0.08 0" quat="0.707107 0.707107 0 0" type="cylinder" class="collision"/>
+        <body name="FR_thigh" pos="0 -0.0955 0">
+          <inertial pos="-0.00374 0.0223 -0.0327" quat="0.551623 -0.0200632 0.0847635 0.829533" mass="1.152" diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="FR_thigh_joint" class="front_hip"/>
+          <geom mesh="thigh_mirror_0" material="go2/metal" class="visual"/>
+          <geom mesh="thigh_mirror_1" material="go2/gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="FR_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 0.000622121 -0.141417" quat="0.703508 -0.00450087 0.00154099 0.710672" mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="FR_calf_joint" class="knee"/>
+            <geom mesh="calf_mirror_0" material="go2/gray" class="visual"/>
+            <geom mesh="calf_mirror_1" material="go2/black" class="visual"/>
+            <geom size="0.013 0.06" pos="0.01 0 -0.06" quat="0.995004 0 -0.0998334 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2/black"/>
+            <geom name="FR" class="foot"/>
+          </body>
+        </body>
+      </body>
+      <body name="RL_hip" pos="-0.1934 0.0465 0">
+        <inertial pos="0.0054 0.00194 -0.000105" quat="0.505462 0.498237 0.497014 0.499245" mass="0.678" diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="RL_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2/metal" class="visual" quat="4.63268e-05 0 1 0"/>
+        <geom mesh="hip_1" material="go2/gray" class="visual" quat="4.63268e-05 0 1 0"/>
+        <geom size="0.046 0.02" pos="0 0.08 0" quat="0.707107 0.707107 0 0" type="cylinder" class="collision"/>
+        <body name="RL_thigh" pos="0 0.0955 0">
+          <inertial pos="-0.00374 -0.0223 -0.0327" quat="0.829533 0.0847635 -0.0200632 0.551623" mass="1.152" diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="RL_thigh_joint" class="back_hip"/>
+          <geom mesh="thigh_0" material="go2/metal" class="visual"/>
+          <geom mesh="thigh_1" material="go2/gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="RL_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 -0.000622121 -0.141417" quat="0.710672 0.00154099 -0.00450087 0.703508" mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="RL_calf_joint" class="knee"/>
+            <geom mesh="calf_0" material="go2/gray" class="visual"/>
+            <geom mesh="calf_1" material="go2/black" class="visual"/>
+            <geom size="0.013 0.06" pos="0.01 0 -0.06" quat="0.995004 0 -0.0998334 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2/black"/>
+            <geom name="RL" class="foot"/>
+          </body>
+        </body>
+      </body>
+      <body name="RR_hip" pos="-0.1934 -0.0465 0">
+        <inertial pos="0.0054 -0.00194 -0.000105" quat="0.499245 0.497014 0.498237 0.505462" mass="0.678" diaginertia="0.00088403 0.000596003 0.000479967"/>
+        <joint name="RR_hip_joint" class="abduction"/>
+        <geom mesh="hip_0" material="go2/metal" class="visual" quat="2.14617e-09 4.63268e-05 4.63268e-05 -1"/>
+        <geom mesh="hip_1" material="go2/gray" class="visual" quat="2.14617e-09 4.63268e-05 4.63268e-05 -1"/>
+        <geom size="0.046 0.02" pos="0 -0.08 0" quat="0.707107 0.707107 0 0" type="cylinder" class="collision"/>
+        <body name="RR_thigh" pos="0 -0.0955 0">
+          <inertial pos="-0.00374 0.0223 -0.0327" quat="0.551623 -0.0200632 0.0847635 0.829533" mass="1.152" diaginertia="0.00594973 0.00584149 0.000878787"/>
+          <joint name="RR_thigh_joint" class="back_hip"/>
+          <geom mesh="thigh_mirror_0" material="go2/metal" class="visual"/>
+          <geom mesh="thigh_mirror_1" material="go2/gray" class="visual"/>
+          <geom size="0.1065 0.01225 0.017" pos="0 0 -0.1065" quat="0.707107 0 0.707107 0" type="box" class="collision"/>
+          <body name="RR_calf" pos="0 0 -0.213">
+            <inertial pos="0.00629595 0.000622121 -0.141417" quat="0.703508 -0.00450087 0.00154099 0.710672" mass="0.241352" diaginertia="0.0014901 0.00146356 5.31397e-05"/>
+            <joint name="RR_calf_joint" class="knee"/>
+            <geom mesh="calf_mirror_0" material="go2/gray" class="visual"/>
+            <geom mesh="calf_mirror_1" material="go2/black" class="visual"/>
+            <geom size="0.013 0.06" pos="0.01 0 -0.06" quat="0.995004 0 -0.0998334 0" type="cylinder" class="collision"/>
+            <geom size="0.011 0.0325" pos="0.02 0 -0.148" quat="0.999688 0 0.0249974 0" type="cylinder" class="collision"/>
+            <geom pos="0 0 -0.213" mesh="foot" class="visual" material="go2/black"/>
+            <geom name="RR" class="foot"/>
+          </body>
+        </body>
+      </body>
+    </body>
+    <!-- Full 88-key piano -->
+    <body name="piano_root" pos="0.8 0 0">
+      <body name="piano/base" pos="-0.127 0 0.02">
+        <geom name="piano//unnamed_geom_0" class="piano/" type="box" size="0.05 0.6105 0.02" material="piano/base"/>
+      </body>
+
+      <body name="piano/white_key_0"  pos="0 -0.59925 0.01125">
+        <geom  name="piano/white_key_geom_0"  class="piano/white_key"/>
+        <joint name="piano/white_joint_0"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_0" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_1"  pos="-0.03 -0.5875 0.026">
+        <geom  name="piano/black_key_geom_1"  class="piano/black_key"/>
+        <joint name="piano/black_joint_1"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_1" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_2"  pos="0 -0.57575 0.01125">
+        <geom  name="piano/white_key_geom_2"  class="piano/white_key"/>
+        <joint name="piano/white_joint_2"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_2" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_3"  pos="0 -0.55225 0.01125">
+        <geom  name="piano/white_key_geom_3"  class="piano/white_key"/>
+        <joint name="piano/white_joint_3"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_3" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_4"  pos="-0.03 -0.54 0.026">
+        <geom  name="piano/black_key_geom_4"  class="piano/black_key"/>
+        <joint name="piano/black_joint_4"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_4" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_5"  pos="0 -0.52875 0.01125">
+        <geom  name="piano/white_key_geom_5"  class="piano/white_key"/>
+        <joint name="piano/white_joint_5"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_5" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_6"  pos="-0.03 -0.5165 0.026">
+        <geom  name="piano/black_key_geom_6"  class="piano/black_key"/>
+        <joint name="piano/black_joint_6"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_6" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_7"  pos="0 -0.50525 0.01125">
+        <geom  name="piano/white_key_geom_7"  class="piano/white_key"/>
+        <joint name="piano/white_joint_7"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_7" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_8"  pos="0 -0.48175 0.01125">
+        <geom  name="piano/white_key_geom_8"  class="piano/white_key"/>
+        <joint name="piano/white_joint_8"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_8" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_9"  pos="-0.03 -0.4695 0.026">
+        <geom  name="piano/black_key_geom_9"  class="piano/black_key"/>
+        <joint name="piano/black_joint_9"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_9" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_10" pos="0 -0.45825 0.01125">
+        <geom  name="piano/white_key_geom_10" class="piano/white_key"/>
+        <joint name="piano/white_joint_10"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_10" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_11" pos="-0.03 -0.446 0.026">
+        <geom  name="piano/black_key_geom_11" class="piano/black_key"/>
+        <joint name="piano/black_joint_11"     class="piano/black_key"/>
+        <site  name="piano/black_key_site_11" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_12" pos="0 -0.43475 0.01125">
+        <geom  name="piano/white_key_geom_12" class="piano/white_key"/>
+        <joint name="piano/white_joint_12"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_12" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_13" pos="-0.03 -0.4225 0.026">
+        <geom  name="piano/black_key_geom_13" class="piano/black_key"/>
+        <joint name="piano/black_joint_13"     class="piano/black_key"/>
+        <site  name="piano/black_key_site_13" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_14" pos="0 -0.41125 0.01125">
+        <geom  name="piano/white_key_geom_14" class="piano/white_key"/>
+        <joint name="piano/white_joint_14"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_14" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_15" pos="0 -0.38775 0.01125">
+        <geom  name="piano/white_key_geom_15" class="piano/white_key"/>
+        <joint name="piano/white_joint_15"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_15" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_16" pos="-0.03 -0.3755 0.026">
+        <geom  name="piano/black_key_geom_16" class="piano/black_key"/>
+        <joint name="piano/black_joint_16"     class="piano/black_key"/>
+        <site  name="piano/black_key_site_16" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_17" pos="0 -0.36425 0.01125">
+        <geom  name="piano/white_key_geom_17" class="piano/white_key"/>
+        <joint name="piano/white_joint_17"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_17" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_18" pos="-0.03 -0.352 0.026">
+        <geom  name="piano/black_key_geom_18" class="piano/black_key"/>
+        <joint name="piano/black_joint_18"     class="piano/black_key"/>
+        <site  name="piano/black_key_site_18" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_19" pos="0 -0.34075 0.01125">
+        <geom  name="piano/white_key_geom_19" class="piano/white_key"/>
+        <joint name="piano/white_joint_19"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_19" class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_20" pos="0 -0.31725 0.01125">
+        <geom  name="piano/white_key_geom_20" class="piano/white_key"/>
+        <joint name="piano/white_joint_20"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_20" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_21" pos="-0.03 -0.305 0.026">
+        <geom  name="piano/black_key_geom_21" class="piano/black_key"/>
+        <joint name="piano/black_joint_21"     class="piano/black_key"/>
+        <site  name="piano/black_key_site_21" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_22" pos="0 -0.29375 0.01125">
+        <geom  name="piano/white_key_geom_22" class="piano/white_key"/>
+        <joint name="piano/white_joint_22"     class="piano/white_key"/>
+        <site  name="piano/white_key_site_22" class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_23" pos="-0.03 -0.2815 0.026">
+        <geom  name="piano/black_key_geom_23" class="piano/black_key"/>  
+        <joint name="piano/black_joint_23"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_23" class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_24" pos="0 -0.27025 0.01125">
+        <geom  name="piano/white_key_geom_24" class="piano/white_key"/>  
+        <joint name="piano/white_joint_24"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_24" class="piano/white_key"/>  
+      </body>
+      <body name="piano/black_key_25" pos="-0.03 -0.258 0.026">
+        <geom  name="piano/black_key_geom_25" class="piano/black_key"/>  
+        <joint name="piano/black_joint_25"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_25" class="piano/black_key"/>  
+      </body>
+      <body name="piano/white_key_26" pos="0 -0.24675 0.01125">
+        <geom  name="piano/white_key_geom_26" class="piano/white_key"/>  
+        <joint name="piano/white_joint_26"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_26" class="piano/white_key"/>  
+      </body>
+      <body name="piano/white_key_27" pos="0 -0.22325 0.01125">
+        <geom  name="piano/white_key_geom_27" class="piano/white_key"/>  
+        <joint name="piano/white_joint_27"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_27" class="piano/white_key"/>  
+      </body>
+      <body name="piano/black_key_28" pos="-0.03 -0.211 0.026">
+        <geom  name="piano/black_key_geom_28" class="piano/black_key"/>  
+        <joint name="piano/black_joint_28"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_28" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_29" pos="0 -0.19975 0.01125">  
+        <geom  name="piano/white_key_geom_29" class="piano/white_key"/>  
+        <joint name="piano/white_joint_29"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_29" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_30" pos="-0.03 -0.1875 0.026">  
+        <geom  name="piano/black_key_geom_30" class="piano/black_key"/>  
+        <joint name="piano/black_joint_30"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_30" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_31" pos="0 -0.17625 0.01125">  
+        <geom  name="piano/white_key_geom_31" class="piano/white_key"/>  
+        <joint name="piano/white_joint_31"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_31" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/white_key_32" pos="0 -0.15275 0.01125">  
+        <geom  name="piano/white_key_geom_32" class="piano/white_key"/>  
+        <joint name="piano/white_joint_32"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_32" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_33" pos="-0.03 -0.1405 0.026">  
+        <geom  name="piano/black_key_geom_33" class="piano/black_key"/>  
+        <joint name="piano/black_joint_33"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_33" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_34" pos="0 -0.12925 0.01125">  
+        <geom  name="piano/white_key_geom_34" class="piano/white_key"/>  
+        <joint name="piano/white_joint_34"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_34" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_35" pos="-0.03 -0.117 0.026">  
+        <geom  name="piano/black_key_geom_35" class="piano/black_key"/>  
+        <joint name="piano/black_joint_35"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_35" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_36" pos="0 -0.10575 0.01125">  
+        <geom  name="piano/white_key_geom_36" class="piano/white_key"/>  
+        <joint name="piano/white_joint_36"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_36" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_37" pos="-0.03 -0.0935 0.026">  
+        <geom  name="piano/black_key_geom_37" class="piano/black_key"/>  
+        <joint name="piano/black_joint_37"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_37" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_38" pos="0 -0.08225 0.01125">  
+        <geom  name="piano/white_key_geom_38" class="piano/white_key"/>  
+        <joint name="piano/white_joint_38"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_38" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/white_key_39" pos="0 -0.05875 0.01125">  
+        <geom  name="piano/white_key_geom_39" class="piano/white_key"/>  
+        <joint name="piano/white_joint_39"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_39" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_40" pos="-0.03 -0.0465 0.026">  
+        <geom  name="piano/black_key_geom_40" class="piano/black_key"/>  
+        <joint name="piano/black_joint_40"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_40" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_41" pos="0 -0.03525 0.01125">  
+        <geom  name="piano/white_key_geom_41" class="piano/white_key"/>  
+        <joint name="piano/white_joint_41"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_41" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_42" pos="-0.03 -0.023 0.026">  
+        <geom  name="piano/black_key_geom_42" class="piano/black_key"/>  
+        <joint name="piano/black_joint_42"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_42" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_43" pos="0 -0.01175 0.01125">  
+        <geom  name="piano/white_key_geom_43" class="piano/white_key"/>  
+        <joint name="piano/white_joint_43"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_43" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/white_key_44" pos="0 0.01175 0.01125">  
+        <geom  name="piano/white_key_geom_44" class="piano/white_key"/>  
+        <joint name="piano/white_joint_44"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_44" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_45" pos="-0.03 0.024 0.026">  
+        <geom  name="piano/black_key_geom_45" class="piano/black_key"/>  
+        <joint name="piano/black_joint_45"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_45" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_46" pos="0 0.03525 0.01125">  
+        <geom  name="piano/white_key_geom_46" class="piano/white_key"/>  
+        <joint name="piano/white_joint_46"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_46" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_47" pos="-0.03 0.0475 0.026">  
+        <geom  name="piano/black_key_geom_47" class="piano/black_key"/>  
+        <joint name="piano/black_joint_47"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_47" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_48" pos="0 0.05875 0.01125">  
+        <geom  name="piano/white_key_geom_48" class="piano/white_key"/>  
+        <joint name="piano/white_joint_48"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_48" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_49" pos="-0.03 0.071 0.026">  
+        <geom  name="piano/black_key_geom_49" class="piano/black_key"/>  
+        <joint name="piano/black_joint_49"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_49" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_50" pos="0 0.08225 0.01125">  
+        <geom  name="piano/white_key_geom_50" class="piano/white_key"/>  
+        <joint name="piano/white_joint_50"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_50" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/white_key_51" pos="0 0.10575 0.01125">  
+        <geom  name="piano/white_key_geom_51" class="piano/white_key"/>  
+        <joint name="piano/white_joint_51"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_51" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_52" pos="-0.03 0.118 0.026">  
+        <geom  name="piano/black_key_geom_52" class="piano/black_key"/>  
+        <joint name="piano/black_joint_52"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_52" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_53" pos="0 0.12925 0.01125">  
+        <geom  name="piano/white_key_geom_53" class="piano/white_key"/>  
+        <joint name="piano/white_joint_53"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_53" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_54" pos="-0.03 0.1415 0.026">  
+        <geom  name="piano/black_key_geom_54" class="piano/black_key"/>  
+        <joint name="piano/black_joint_54"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_54" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_55" pos="0 0.15275 0.01125">  
+        <geom  name="piano/white_key_geom_55" class="piano/white_key"/>  
+        <joint name="piano/white_joint_55"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_55" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/white_key_56" pos="0 0.17625 0.01125">  
+        <geom  name="piano/white_key_geom_56" class="piano/white_key"/>  
+        <joint name="piano/white_joint_56"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_56" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_57" pos="-0.03 0.1885 0.026">  
+        <geom  name="piano/black_key_geom_57" class="piano/black_key"/>  
+        <joint name="piano/black_joint_57"     class="piano/black_key"/>  
+        <site  name="piano/black_key_site_57" class="piano/black_key"/>  
+      </body>  
+      <body name="piano/white_key_58" pos="0 0.19975 0.01125">  
+        <geom  name="piano/white_key_geom_58" class="piano/white_key"/>  
+        <joint name="piano/white_joint_58"     class="piano/white_key"/>  
+        <site  name="piano/white_key_site_58" class="piano/white_key"/>  
+      </body>  
+      <body name="piano/black_key_59" pos="-0.03 0.212 0.026">
+        <geom  name="piano/black_key_geom_59" class="piano/black_key"/>
+        <joint name="piano/black_joint_59"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_59"   class="piano/black_key"/>
+      </body>
+            <body name="piano/white_key_60" pos="0 0.22325 0.01125">
+        <geom  name="piano/white_key_geom_60" class="piano/white_key"/>
+        <joint name="piano/white_joint_60"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_60"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_61" pos="-0.03 0.2355 0.026">
+        <geom  name="piano/black_key_geom_61"  class="piano/black_key"/>
+        <joint name="piano/black_joint_61"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_61"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_62" pos="0 0.24675 0.01125">
+        <geom  name="piano/white_key_geom_62"  class="piano/white_key"/>
+        <joint name="piano/white_joint_62"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_62"  class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_63" pos="0 0.27025 0.01125">
+        <geom  name="piano/white_key_geom_63"  class="piano/white_key"/>
+        <joint name="piano/white_joint_63"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_63"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_64" pos="-0.03 0.2825 0.026">
+        <geom  name="piano/black_key_geom_64"  class="piano/black_key"/>
+        <joint name="piano/black_joint_64"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_64"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_65" pos="0 0.29375 0.01125">
+        <geom  name="piano/white_key_geom_65"  class="piano/white_key"/>
+        <joint name="piano/white_joint_65"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_65"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_66" pos="-0.03 0.306 0.026">
+        <geom  name="piano/black_key_geom_66"  class="piano/black_key"/>
+        <joint name="piano/black_joint_66"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_66"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_67" pos="0 0.31725 0.01125">
+        <geom  name="piano/white_key_geom_67"  class="piano/white_key"/>
+        <joint name="piano/white_joint_67"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_67"  class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_68" pos="0 0.34075 0.01125">
+        <geom  name="piano/white_key_geom_68"  class="piano/white_key"/>
+        <joint name="piano/white_joint_68"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_68"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_69" pos="-0.03 0.353 0.026">
+        <geom  name="piano/black_key_geom_69"  class="piano/black_key"/>
+        <joint name="piano/black_joint_69"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_69"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_70" pos="0 0.36425 0.01125">
+        <geom  name="piano/white_key_geom_70"  class="piano/white_key"/>
+        <joint name="piano/white_joint_70"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_70"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_71" pos="-0.03 0.3765 0.026">
+        <geom  name="piano/black_key_geom_71"  class="piano/black_key"/>
+        <joint name="piano/black_joint_71"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_71"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_72" pos="0 0.38775 0.01125">
+        <geom  name="piano/white_key_geom_72"  class="piano/white_key"/>
+        <joint name="piano/white_joint_72"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_72"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_73" pos="-0.03 0.4 0.026">
+        <geom  name="piano/black_key_geom_73"  class="piano/black_key"/>
+        <joint name="piano/black_joint_73"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_73"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_74" pos="0 0.41125 0.01125">
+        <geom  name="piano/white_key_geom_74"  class="piano/white_key"/>
+        <joint name="piano/white_joint_74"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_74"  class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_75" pos="0 0.43475 0.01125">
+        <geom  name="piano/white_key_geom_75"  class="piano/white_key"/>
+        <joint name="piano/white_joint_75"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_75"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_76" pos="-0.03 0.447 0.026">
+        <geom  name="piano/black_key_geom_76"  class="piano/black_key"/>
+        <joint name="piano/black_joint_76"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_76"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_77" pos="0 0.45825 0.01125">
+        <geom  name="piano/white_key_geom_77"  class="piano/white_key"/>
+        <joint name="piano/white_joint_77"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_77"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_78" pos="-0.03 0.4705 0.026">
+        <geom  name="piano/black_key_geom_78"  class="piano/black_key"/>
+        <joint name="piano/black_joint_78"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_78"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_79" pos="0 0.48175 0.01125">
+        <geom  name="piano/white_key_geom_79"  class="piano/white_key"/>
+        <joint name="piano/white_joint_79"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_79"  class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_80" pos="0 0.50525 0.01125">
+        <geom  name="piano/white_key_geom_80"  class="piano/white_key"/>
+        <joint name="piano/white_joint_80"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_80"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_81" pos="-0.03 0.5175 0.026">
+        <geom  name="piano/black_key_geom_81"  class="piano/black_key"/>
+        <joint name="piano/black_joint_81"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_81"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_82" pos="0 0.52875 0.01125">
+        <geom  name="piano/white_key_geom_82"  class="piano/white_key"/>
+        <joint name="piano/white_joint_82"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_82"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_83" pos="-0.03 0.541 0.026">
+        <geom  name="piano/black_key_geom_83"  class="piano/black_key"/>
+        <joint name="piano/black_joint_83"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_83"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_84" pos="0 0.55225 0.01125">
+        <geom  name="piano/white_key_geom_84"  class="piano/white_key"/>
+        <joint name="piano/white_joint_84"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_84"  class="piano/white_key"/>
+      </body>
+      <body name="piano/black_key_85" pos="-0.03 0.5645 0.026">
+        <geom  name="piano/black_key_geom_85"  class="piano/black_key"/>
+        <joint name="piano/black_joint_85"      class="piano/black_key"/>
+        <site  name="piano/black_key_site_85"  class="piano/black_key"/>
+      </body>
+      <body name="piano/white_key_86" pos="0 0.57575 0.01125">
+        <geom  name="piano/white_key_geom_86"  class="piano/white_key"/>
+        <joint name="piano/white_joint_86"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_86"  class="piano/white_key"/>
+      </body>
+      <body name="piano/white_key_87" pos="0 0.59925 0.01125">
+        <geom  name="piano/white_key_geom_87"  class="piano/white_key"/>
+        <joint name="piano/white_joint_87"      class="piano/white_key"/>
+        <site  name="piano/white_key_site_87"  class="piano/white_key"/>
+      </body>
+
+      <camera name="piano/closeup"    class="piano/" pos="-0.313 0.024 0.455"  xyaxes="0.003 -1 0 0.607 0.002 0.795"/>
+      <camera name="piano/left"       class="piano/" pos="0.393 -0.791 0.638" xyaxes="0.808 0.589 0 -0.388 0.533 0.752"/>
+      <camera name="piano/right"      class="piano/" pos="0.472 0.598 0.58"  xyaxes="-0.637 0.771 0 -0.51 -0.421 0.75"/>
+      <camera name="piano/back"       class="piano/" pos="-0.569 0.008 0.841" xyaxes="-0.009 -1 0 0.783 -0.007 0.622"/>
+      <camera name="piano/egocentric" class="piano/" pos="0.417 -0.039 0.717" xyaxes="-0.002 1 0 -0.867 -0.002 0.498"/>
+      <camera name="piano/topdown"    class="piano/" fovy="33.9496196739872" pos="0 0 1" quat="1 0 0 1"/>
+    </body>
+  </worldbody>
+
+
+
+
+<!-- Actuators for the robot -->
+  <actuator>
+    <motor class="abduction" name="FL_hip" joint="FL_hip_joint"/>
+    <motor class="hip" name="FL_thigh" joint="FL_thigh_joint"/>
+    <motor class="knee" name="FL_calf" joint="FL_calf_joint"/>
+    <motor class="abduction" name="FR_hip" joint="FR_hip_joint"/>
+    <motor class="hip" name="FR_thigh" joint="FR_thigh_joint"/>
+    <motor class="knee" name="FR_calf" joint="FR_calf_joint"/>
+    <motor class="abduction" name="RL_hip" joint="RL_hip_joint"/>
+    <motor class="hip" name="RL_thigh" joint="RL_thigh_joint"/>
+    <motor class="knee" name="RL_calf" joint="RL_calf_joint"/>
+    <motor class="abduction" name="RR_hip" joint="RR_hip_joint"/>
+    <motor class="hip" name="RR_thigh" joint="RR_thigh_joint"/>
+    <motor class="knee" name="RR_calf" joint="RR_calf_joint"/>
+  </actuator>
+
+  <!-- Keyframes for the robot -->
+  <keyframe>
+    <key name="home" qpos="0 0 0.27 1 0 0 0 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8" ctrl="0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8"/>
+  </keyframe>
+</mujoco>
+
