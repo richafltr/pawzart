@@ -19,23 +19,15 @@ PawzArt combines advanced robotics simulation with musical performance, showcasi
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- Modern web browser with WebAssembly support
-- Node.js and pnpm for development
+### Running the Simulator
 
-### Installation
+No installation is required! All you need is a modern web browser with WebAssembly support and Node.js.
 
-```bash
-# Install dependencies
-pnpm install
-
-# Start development server  
-pnpm dev
-```
-
-### Usage
-
-1. Open `index.html` in your browser
+1. **Start a local server** from the project's root directory:
+   ```bash
+   npx serve
+   ```
+2. **Open the provided URL** in your browser (usually `http://localhost:3000`).
 2. **Select a scene** from the Scene dropdown:
    - **Piano with Hands**: Original bimanual piano playing demo
    - **Unitree Go2 Robot**: Standalone quadruped robot simulation
