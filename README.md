@@ -1,5 +1,9 @@
 # PawzArt - Three.js MuJoCo WASM Piano Simulator 🎹🤖
 
+![Pawzart](assets/Pawzart.png)
+![Robot Hands with Piano](assets/robothandswithpiano.png)
+![Piano Isolation](assets/piano_isolation.png)
+
 A web-based physics simulator that demonstrates robotic piano playing using learned dexterity models with support for multiple robot configurations. Built with Three.js and MuJoCo WASM, featuring bimanual Shadow Hand robots performing classical piano pieces with realistic physics simulation, plus integration with the Unitree Go2 quadruped robot.
 
 ## 🎹 Overview
