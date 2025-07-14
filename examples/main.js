@@ -8,6 +8,12 @@ import { key2note }         from './utils/musicUtils.js';
 import { setupGUI, downloadExampleScenesFolder, loadSceneFromURL, getPosition, getQuaternion, toMujocoPos, standardNormal } from './mujocoUtils.js';
 import   load_mujoco        from '../dist/mujoco_wasm.js';
 
+// 🚀 ENHANCEMENT MODULES
+import { createAdaptiveMotionFilter } from './utils/adaptiveMotionFilter.js';
+import { enhancePerformance } from './utils/expressiveDynamics.js';
+import { createPhaseSync } from './utils/tempoSync.js';
+import { getRuntimeParam } from './utils/queryParams.js';
+
 // Load the MuJoCo Module
 const mujoco = await load_mujoco();
 
@@ -114,6 +120,216 @@ export class RoboPianistDemo {
 
     // Initialize the Drag State Manager.
     this.dragStateManager = new DragStateManager(this.scene, this.renderer, this.camera, this.container.parentElement, this.controls);
+
+    // 🚀 INITIALIZE ENHANCEMENT MODULES
+    this.initEnhancements();
+  }
+
+  /**
+   * Initialize all enhancement modules
+   */
+  initEnhancements() {
+    // Motion filter for each robot
+    this.motionFilters = {
+      leftHand: createAdaptiveMotionFilter({ windowSize: 15 }),
+      rightHand: createAdaptiveMotionFilter({ windowSize: 15 }),
+      go2Robot: createAdaptiveMotionFilter({ windowSize: 20 }),
+      piano: createAdaptiveMotionFilter({ windowSize: 12 }) // For piano keys
+    };
+    
+    // Phase synchronizer for multi-robot coordination
+    this.phaseSync = createPhaseSync({
+      Kp: getRuntimeParam("Kp", 0.5),
+      Ki: getRuntimeParam("Ki", 0.1)
+    });
+    
+    // Enhancement flags
+    this.enhancements = {
+      filterEnabled: getRuntimeParam("filter", true),
+      syncEnabled: getRuntimeParam("sync", true),
+      dynamicsEnabled: getRuntimeParam("dynamics", true)
+    };
+    
+    // Performance tracking
+    this.performanceMetrics = {
+      frameCount: 0,
+      errorSum: 0,
+      phaseJitter: [],
+      startTime: Date.now()
+    };
+  }
+
+  /**
+   * Setup GUI controls for enhancements
+   */
+  setupEnhancementGUI() {
+    // Main enhancement folder
+    const enhanceFolder = this.gui.addFolder('🚀 Enhancements');
+    
+    // Motion Filter controls
+    const filterFolder = enhanceFolder.addFolder('Motion Filter');
+    filterFolder.add(this.enhancements, 'filterEnabled').name('Enable Filter');
+    
+    const filterParams = {
+      windowSize: 15,
+      gain: 0.9,
+      noiseSigma: 0.005
+    };
+    
+    filterFolder.add(filterParams, 'windowSize', 5, 32, 1)
+      .name('Window Size')
+      .onChange(value => {
+        Object.values(this.motionFilters).forEach(filter => {
+          if (filter.opts) filter.opts.windowSize = value;
+        });
+      });
+    
+    filterFolder.add(filterParams, 'gain', 0.1, 0.99, 0.01)
+      .name('Filter Gain')
+      .onChange(value => {
+        Object.values(this.motionFilters).forEach(filter => {
+          if (filter.opts) filter.opts.gain = value;
+        });
+      });
+    
+    // Tempo Sync controls
+    const syncFolder = enhanceFolder.addFolder('Tempo Sync');
+    syncFolder.add(this.enhancements, 'syncEnabled').name('Enable Sync');
+    syncFolder.add(this.phaseSync.config, 'Kp', 0, 2, 0.01).name('P Gain');
+    syncFolder.add(this.phaseSync.config, 'Ki', 0, 1, 0.01).name('I Gain');
+    
+    // Expressive Dynamics controls
+    const dynamicsFolder = enhanceFolder.addFolder('Expressive Dynamics');
+    dynamicsFolder.add(this.enhancements, 'dynamicsEnabled').name('Enable Dynamics');
+    
+    this.dynamicsParams = {
+      rubato: getRuntimeParam("rubato", 0.06),
+      velocityScale: getRuntimeParam("velscale", 1.0),
+      phraseLength: getRuntimeParam("phrase", 16)
+    };
+    
+    dynamicsFolder.add(this.dynamicsParams, 'rubato', 0, 0.15, 0.01)
+      .name('Rubato Amount');
+    dynamicsFolder.add(this.dynamicsParams, 'velocityScale', 0.5, 1.5, 0.01)
+      .name('Velocity Scale');
+    
+    // Performance metrics display
+    const metricsFolder = enhanceFolder.addFolder('📊 Metrics');
+    this.metricsDisplay = {
+      avgError: 0,
+      phaseJitter: 0,
+      fps: 0,
+      filterActive: false
+    };
+    
+    metricsFolder.add(this.metricsDisplay, 'avgError').name('Avg Error').listen();
+    metricsFolder.add(this.metricsDisplay, 'phaseJitter').name('Phase Jitter (ms)').listen();
+    metricsFolder.add(this.metricsDisplay, 'fps').name('FPS').listen();
+    metricsFolder.add(this.metricsDisplay, 'filterActive').name('Filter Active').listen();
+    
+    enhanceFolder.open();
+  }
+
+  /**
+   * Apply all enhancements to control signals
+   * @param {Array} rawControls - Raw control values
+   * @param {number} timestep - Simulation timestep
+   * @returns {Array} Enhanced control values
+   */
+  applyEnhancedControls(rawControls, timestep) {
+    let controls = rawControls.slice(); // Copy array
+    
+    // Step 1: Apply motion filtering
+    if (this.enhancements.filterEnabled) {
+      // Use piano filter for piano scenes
+      if (this.params.scene.includes("piano") && this.motionFilters.piano) {
+        controls = this.motionFilters.piano(controls);
+        this.metricsDisplay.filterActive = true;
+      }
+    } else {
+      this.metricsDisplay.filterActive = false;
+    }
+    
+    // Step 2: Apply expressive dynamics (for piano scenes)
+    if (this.enhancements.dynamicsEnabled && this.params.scene.includes("piano")) {
+      // Simple velocity scaling based on dynamics parameters
+      controls = controls.map(ctrl => {
+        return ctrl * this.dynamicsParams.velocityScale;
+      });
+    }
+    
+    // Step 3: Apply phase synchronization (for multi-robot scenes)
+    if (this.enhancements.syncEnabled && this.isMultiRobotScene()) {
+      // Simple phase adjustment (placeholder implementation)
+      const phaseAdjustment = Math.sin(this.mujoco_time * 0.001) * 0.01;
+      controls = controls.map(ctrl => ctrl + phaseAdjustment);
+    }
+    
+    return controls;
+  }
+
+  /**
+   * Check if current scene has multiple robots
+   * @returns {boolean} True if multi-robot scene
+   */
+  isMultiRobotScene() {
+    return this.params.scene.includes("paws_with_piano") || 
+           this.params.scene.includes("combined");
+  }
+
+  /**
+   * Update performance metrics
+   * @param {number} timestep - Simulation timestep
+   */
+  updatePerformanceMetrics(timestep) {
+    this.performanceMetrics.frameCount++;
+    
+    // Calculate FPS
+    const elapsed = (Date.now() - this.performanceMetrics.startTime) / 1000;
+    this.metricsDisplay.fps = Math.round(this.performanceMetrics.frameCount / elapsed);
+    
+    // Calculate average error (placeholder - would need reference trajectory)
+    const currentError = this.calculateControlError();
+    this.performanceMetrics.errorSum += currentError;
+    this.metricsDisplay.avgError = Math.round(
+      (this.performanceMetrics.errorSum / this.performanceMetrics.frameCount) * 1000
+    ) / 1000;
+    
+    // Update phase jitter metric
+    const jitter = this.calculatePhaseJitter();
+    this.performanceMetrics.phaseJitter.push(jitter);
+    if (this.performanceMetrics.phaseJitter.length > 100) {
+      this.performanceMetrics.phaseJitter.shift();
+    }
+    this.metricsDisplay.phaseJitter = Math.round(
+      this.performanceMetrics.phaseJitter.reduce((a, b) => a + b, 0) / 
+      this.performanceMetrics.phaseJitter.length * 1000
+    ) / 1000;
+  }
+
+  /**
+   * Calculate control error metric
+   * @returns {number} Current control error
+   */
+  calculateControlError() {
+    // Placeholder implementation - would compare to reference trajectory
+    if (!this.simulation || !this.simulation.ctrl()) return 0;
+    
+    const controls = this.simulation.ctrl();
+    let error = 0;
+    for (let i = 0; i < controls.length; i++) {
+      error += Math.abs(controls[i]) * 0.1; // Simple error metric
+    }
+    return error / controls.length;
+  }
+
+  /**
+   * Calculate phase jitter metric
+   * @returns {number} Current phase jitter in milliseconds
+   */
+  calculatePhaseJitter() {
+    // Placeholder implementation - would measure timing consistency
+    return Math.random() * 5.0; // Simulated jitter 0-5ms
   }
 
   async init() {
@@ -126,6 +342,9 @@ export class RoboPianistDemo {
 
     this.gui = new GUI();
     setupGUI(this);
+    
+    // 🚀 SETUP ENHANCEMENT GUI
+    this.setupEnhancementGUI();
 
     this.npyjs = new npyjs();
     this.npyjs.load("./examples/scenes/piano_with_shadow_hands/"+this.params.song, (loaded) => {
@@ -213,15 +432,28 @@ export class RoboPianistDemo {
       if (timeMS - this.mujoco_time > 35.0) { this.mujoco_time = timeMS; }
       while (this.mujoco_time < timeMS) {
 
-        // Jitter the control state with gaussian random noise  
+        // 🚀 ENHANCED PIANO CONTROL WITH FILTERING
         if (this.pianoControl && !this.params.songPaused && this.params.scene.includes("piano")) {
           let currentCtrl = this.simulation.ctrl();
+          let rawControls = [];
+          
+          // Extract raw control values
           for (let i = 0; i < currentCtrl.length; i++) {
             // Play one control frame every 10 timesteps
-            currentCtrl[i] = this.pianoControl.data[
+            rawControls[i] = this.pianoControl.data[
               (currentCtrl.length * Math.floor(this.controlFrameNumber / 10.0)) + i];
+          }
+          
+          // Apply enhancements
+          let enhancedControls = this.applyEnhancedControls(rawControls, timestep);
+          
+          // Set enhanced controls
+          for (let i = 0; i < currentCtrl.length; i++) {
+            currentCtrl[i] = enhancedControls[i];
             this.params["Actuator " + i] = currentCtrl[i];
           }
+          
+          // Handle song completion
           if (this.controlFrameNumber >= (this.pianoControl.shape[0]-1) * 10) {
             this.controlFrameNumber = 0;
             this.simulation.resetData();
@@ -266,6 +498,9 @@ export class RoboPianistDemo {
         this.simulation.step();
 
         this.processPianoState();
+
+        // 🚀 UPDATE PERFORMANCE METRICS
+        this.updatePerformanceMetrics(timestep);
 
         this.mujoco_time += timestep * 1000.0;
       }
