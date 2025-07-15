@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-07-14T03:51:38.820Z",
+  "results": {
+    "baseline": {
+      "rmsError": 0.032086841588835596,
+      "phaseJitter": 4.980232327932584,
+      "musicalScore": 0.7090041209925796,
+      "frameCount": 15000
+    },
+    "adaptive": {
+      "rmsError": 0.03205023989502034,
+      "phaseJitter": 5.019839482007112,
+      "musicalScore": 0.7098555752918382,
+      "frameCount": 15000
+    },
+    "robust": {
+      "rmsError": 0.032035934419648915,
+      "phaseJitter": 5.037871224163842,
+      "musicalScore": 0.7097419234266401,
+      "frameCount": 15000
+    }
+  },
+  "improvements": {
+    "errorReduction": 0.0011407072807064539,
+    "jitterReduction": -0.007952872771092072,
+    "scoreImprovement": 0.0012009158678324564
+  },
+  "targetsMet": {
+    "error": false,
+    "jitter": true,
+    "musical": false
+  },
+  "overallPass": false
+}
