@@ -289,7 +289,17 @@ export function setupGUI(parentContext) {
  */
 export async function loadSceneFromURL(mujoco, filename, parent) {
     // Load in the state from XML.
-    parent.model       = mujoco.Model.load_from_xml("/working/"+filename);
+    console.log(`Loading model from /working/${filename}...`);
+    try {
+        parent.model = mujoco.Model.load_from_xml("/working/" + filename);
+        if (!parent.model) {
+            throw new Error("mujoco.Model.load_from_xml returned null or undefined.");
+        }
+        console.log("Model loaded successfully. nq:" + parent.model.nq() + ", nv:" + parent.model.nv() + ", ngeom:" + parent.model.ngeom());
+    } catch (error) {
+        console.error(`[CRITICAL] Failed to load model from ${filename}. This is likely the cause of the RangeError.`, error);
+        throw error; // Re-throw the error to be caught by the caller
+    }
     parent.state       = new mujoco.State(parent.model);
     parent.simulation  = new mujoco.Simulation(parent.model, parent.state);
 
@@ -519,82 +529,7 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
     return [model, state, simulation, bodies, lights]
 }
 
-/** Downloads the scenes/examples folder to MuJoCo's virtual filesystem
- * @param {mujoco} mujoco */
-export async function downloadExampleScenesFolder(mujoco) {
-  let allFiles = [
-    "piano_with_shadow_hands/f_distal_pst-927e7e0da0ee76e69c0444b22bade45ff20ab5ee.obj",
-    "piano_with_shadow_hands/f_knuckle-4e74747ced8908917157e00df691de5cfc71808c.obj",
-    "piano_with_shadow_hands/f_middle-c817011a5fccb8dac0f3201f10aa30ffa74db8b6.obj",
-    "piano_with_shadow_hands/f_proximal-2b944834ac12ce9bb152073bce3db339405bc76d.obj",
-    "piano_with_shadow_hands/forearm_0-20abf0e17ef9afc17a625f75fc0ad21f31b2ff9a.obj",
-    "piano_with_shadow_hands/forearm_1-f5b8ac92a6e1b0a6b27c50dac2004867e6c0fb5b.obj",
-    "piano_with_shadow_hands/forearm_collision-3ef43cdb2273599be12fc3270639b8782c869cb4.obj",
-    "piano_with_shadow_hands/lf_metacarpal-43a8cbd60c754686e733e10c0c28ff082b46a917.obj",
-    "piano_with_shadow_hands/palm-20de86ceb3b063e7ca1bf25fa6ddd07c068d6a70.obj",
-    "piano_with_shadow_hands/scene.xml",
-    "piano_with_shadow_hands/th_distal_pst-c003d5be2d6a841babda3d88c51010617a2ba4bb.obj",
-    "piano_with_shadow_hands/th_middle-c6937ecc6bf6b01a854aaffb71f3beeda05f8ac3.obj",
-    "piano_with_shadow_hands/th_proximal-836fc483b89bf08806ab50636ab1fe738a54406e.obj",
-    "piano_with_shadow_hands/wrist-87545134a753f219a1f55310cc200489b3a03c47.obj",
-    // Add Unitree Go2 assets
-    "unitree_go2/scene.xml",
-    "unitree_go2/go2.xml",
-    "unitree_go2/assets/base_0.obj",
-    "unitree_go2/assets/base_1.obj",
-    "unitree_go2/assets/base_2.obj",
-    "unitree_go2/assets/base_3.obj",
-    "unitree_go2/assets/base_4.obj",
-    "unitree_go2/assets/hip_0.obj",
-    "unitree_go2/assets/hip_1.obj",
-    "unitree_go2/assets/thigh_0.obj",
-    "unitree_go2/assets/thigh_1.obj",
-    "unitree_go2/assets/thigh_mirror_0.obj",
-    "unitree_go2/assets/thigh_mirror_1.obj",
-    "unitree_go2/assets/calf_0.obj",
-    "unitree_go2/assets/calf_1.obj",
-    "unitree_go2/assets/calf_mirror_0.obj",
-    "unitree_go2/assets/calf_mirror_1.obj",
-    "unitree_go2/assets/foot.obj",
-    // Add Paws with Piano scene
-    "paws_with_piano/scene.xml",
-    "paws_with_piano/assets/base_0.obj",
-    "paws_with_piano/assets/base_1.obj",
-    "paws_with_piano/assets/base_2.obj",
-    "paws_with_piano/assets/base_3.obj",
-    "paws_with_piano/assets/base_4.obj",
-    "paws_with_piano/assets/hip_0.obj",
-    "paws_with_piano/assets/hip_1.obj",
-    "paws_with_piano/assets/thigh_0.obj",
-    "paws_with_piano/assets/thigh_1.obj",
-    "paws_with_piano/assets/thigh_mirror_0.obj",
-    "paws_with_piano/assets/thigh_mirror_1.obj",
-    "paws_with_piano/assets/calf_0.obj",
-    "paws_with_piano/assets/calf_1.obj",
-    "paws_with_piano/assets/calf_mirror_0.obj",
-    "paws_with_piano/assets/calf_mirror_1.obj",
-    "paws_with_piano/assets/foot.obj",
 
-  ];
-
-  let requests = allFiles.map((url) => fetch("./examples/scenes/" + url));
-  let responses = await Promise.all(requests);
-  for (let i = 0; i < responses.length; i++) {
-      let split = allFiles[i].split("/");
-      let working = '/working/';
-      for (let f = 0; f < split.length - 1; f++) {
-          working += split[f];
-          if (!mujoco.FS.analyzePath(working).exists) { mujoco.FS.mkdir(working); }
-          working += "/";
-      }
-
-      if (allFiles[i].endsWith(".png") || allFiles[i].endsWith(".stl") || allFiles[i].endsWith(".skn")) {
-          mujoco.FS.writeFile("/working/" + allFiles[i], new Uint8Array(await responses[i].arrayBuffer()));
-      } else {
-          mujoco.FS.writeFile("/working/" + allFiles[i], await responses[i].text());
-      }
-  }
-}
 
 /** Access the vector at index, swizzle for three.js, and apply to the target THREE.Vector3
  * @param {Float32Array|Float64Array} buffer
