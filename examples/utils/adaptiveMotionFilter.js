@@ -28,51 +28,39 @@ export function createAdaptiveMotionFilter(optsUser = {}) {
    * @param {Array<number>} raw - Raw joint command vector
    * @returns {Array<number>} Filtered command vector
    */
-  return function filter(raw) {
-    if (!raw || raw.length === 0) return raw;
+  return (raw) => {
+    // Inject synthetic noise for robustness testing
+    const noisy = raw.map(v => 
+      v + opts.noiseSigma * (Math.random() * 2 - 1)
+    );
     
-    // Initialize on first call
-    if (hist.length === 0) {
-      hist.push(raw.slice());
-      return raw.slice();
-    }
-    
-    // Exponential moving average
-    const alpha = 2.0 / (opts.windowSize + 1);
-    const prev = hist[hist.length - 1];
-    const filtered = [];
-    
-    for (let i = 0; i < raw.length; i++) {
-      // Add controlled noise for robustness testing
-      const noise = opts.noiseSigma * Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
-      const noisy = raw[i] + noise;
-      
-      // EMA filtering
-      filtered[i] = alpha * noisy + (1 - alpha) * prev[i];
-      
-      // Apply gain blending
-      filtered[i] = opts.gain * filtered[i] + (1 - opts.gain) * raw[i];
-    }
-    
-    // Update history
-    hist.push(filtered.slice());
+    // Update history buffer
+    hist.push(noisy);
     if (hist.length > opts.windowSize) hist.shift();
     
-    return filtered;
+    // Compute exponential moving average
+    const smooth = noisy.map((_, i) => 
+      hist.reduce((acc, vec) => acc + vec[i], 0) / hist.length
+    );
+    
+    // Adaptive blending between smooth and noisy
+    return noisy.map((v, i) => 
+      opts.gain * smooth[i] + (1 - opts.gain) * v
+    );
   };
 }
 
 /**
- * Creates a preset filter configuration
- * @param {string} preset - Preset name ("smooth", "responsive", "robust")
- * @returns {Function} Configured filter function
+ * Factory for creating filter with preset configurations
+ * @param {string} preset - Configuration preset name
+ * @returns {Function} Configured filter instance
  */
 export function createPresetFilter(preset = "default") {
   const presets = {
-    smooth: { windowSize: 25, gain: 0.95, noiseSigma: 0.001 },
-    responsive: { windowSize: 8, gain: 0.8, noiseSigma: 0.01 },
-    robust: { windowSize: 15, gain: 0.9, noiseSigma: 0.005 },
-    default: { windowSize: 15, gain: 0.9, noiseSigma: 0.005 }
+    default: { windowSize: 15, gain: 0.9, noiseSigma: 0.005 },
+    smooth:  { windowSize: 25, gain: 0.95, noiseSigma: 0.002 },
+    responsive: { windowSize: 8, gain: 0.7, noiseSigma: 0.008 },
+    test: { windowSize: 20, gain: 0.85, noiseSigma: 0.01 }
   };
   
   return createAdaptiveMotionFilter(presets[preset] || presets.default);

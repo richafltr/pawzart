@@ -49,10 +49,10 @@ export function enhancePerformance(ctrlSequence, seed = 42) {
       const velocityEnv = applyVelocityEnvelope(qpos, phraseProgress, velocityScale);
       
       enhanced.push([finalTiming, velocityEnv]);
-      timeOffset += timingVar * 0.1; // Accumulate small timing drift
+      timeOffset += timingVar * noise * 0.1; // Accumulate drift
     } else {
-      // No phrase context, pass through unchanged
-      enhanced.push([t, qpos]);
+      // Outside phrase boundaries - maintain original timing
+      enhanced.push([t + timeOffset, qpos]);
     }
   }
   
@@ -60,34 +60,32 @@ export function enhancePerformance(ctrlSequence, seed = 42) {
 }
 
 /**
- * Detect musical phrases using velocity analysis
+ * Detect musical phrases based on velocity patterns
  * @param {Array} sequence - Control sequence
  * @param {number} minLength - Minimum phrase length
- * @returns {Array} Phrase boundaries [{start, end}, ...]
+ * @returns {Array} Detected phrase boundaries
  */
 function detectPhrases(sequence, minLength) {
   const phrases = [];
-  const velocities = [];
-  
-  // Calculate velocity profile
-  for (let i = 1; i < sequence.length - 1; i++) {
-    velocities.push(calculateVelocity(sequence, i));
-  }
-  
-  // Find phrase boundaries at velocity minima
   let phraseStart = 0;
-  for (let i = minLength; i < velocities.length - minLength; i++) {
-    if (velocities[i] < velocities[i-1] && velocities[i] < velocities[i+1]) {
-      // Local minimum = phrase boundary
-      if (i - phraseStart >= minLength) {
+  
+  for (let i = 1; i < sequence.length - 1; i++) {
+    if (i - phraseStart >= minLength) {
+      // Simple velocity-based phrase detection
+      const prevVel = calculateVelocity(sequence, i - 1);
+      const currVel = calculateVelocity(sequence, i);
+      
+      // Detect zero crossing or significant change
+      if (Math.sign(prevVel) !== Math.sign(currVel) || 
+          Math.abs(currVel) < 0.1) {
         phrases.push({ start: phraseStart, end: i });
         phraseStart = i;
       }
     }
   }
   
-  // Add final phrase
-  if (sequence.length - phraseStart >= minLength) {
+  // Final phrase
+  if (sequence.length - phraseStart >= minLength / 2) {
     phrases.push({ start: phraseStart, end: sequence.length });
   }
   
@@ -95,67 +93,62 @@ function detectPhrases(sequence, minLength) {
 }
 
 /**
- * Calculate velocity magnitude at sequence index
+ * Calculate velocity between control points
  * @param {Array} sequence - Control sequence
- * @param {number} idx - Index to calculate velocity at
+ * @param {number} idx - Index
  * @returns {number} Velocity magnitude
  */
 function calculateVelocity(sequence, idx) {
-  const prev = sequence[idx - 1][1];
-  const curr = sequence[idx][1];
-  const next = sequence[idx + 1][1];
+  if (idx === 0 || idx >= sequence.length - 1) return 0;
   
-  let vel = 0;
-  for (let i = 0; i < curr.length; i++) {
-    const dx = (next[i] - prev[i]) / 2;
-    vel += dx * dx;
-  }
+  const dt = sequence[idx + 1][0] - sequence[idx][0];
+  const dq = sequence[idx + 1][1].map((q, i) => q - sequence[idx][1][i]);
   
-  return Math.sqrt(vel);
+  return Math.sqrt(dq.reduce((sum, v) => sum + v * v, 0)) / dt;
 }
 
 /**
- * Apply velocity envelope for expressive dynamics
+ * Apply cosine-based velocity envelope
  * @param {Array} qpos - Joint positions
  * @param {number} progress - Phrase progress [0,1]
- * @param {number} scale - Velocity scaling factor
- * @returns {Array} Modified joint positions
+ * @param {number} scale - Scaling factor
+ * @returns {Array} Modulated positions
  */
 function applyVelocityEnvelope(qpos, progress, scale) {
-  // Gaussian envelope for expressive timing
-  const envelope = Math.exp(-Math.pow(progress - 0.5, 2) / 0.2) * scale;
-  
-  return qpos.map(pos => pos * envelope);
+  const envelope = 0.8 + 0.2 * Math.cos(progress * Math.PI * 2);
+  return qpos.map(q => q * envelope * scale);
 }
 
 /**
- * Smooth noise function for natural randomness
+ * Generate smooth noise (simplified Perlin-like)
  * @param {Function} rng - Random number generator
- * @param {number} x - Input value
- * @returns {number} Smooth noise value
+ * @param {number} x - Input coordinate
+ * @returns {number} Smooth noise value [-1, 1]
  */
 function smoothNoise(rng, x) {
-  // Simple 1D Perlin-like noise
-  const i = Math.floor(x);
-  const f = x - i;
+  const x0 = Math.floor(x * 8) / 8;
+  const x1 = x0 + 0.125;
+  const fx = (x - x0) * 8;
   
-  const a = rng();
-  const b = rng();
+  // Cubic interpolation
+  const sx = fx * fx * (3 - 2 * fx);
   
-  return a * (1 - f) + b * f;
+  return (1 - sx) * (rng() * 2 - 1) + sx * (rng() * 2 - 1);
 }
 
 /**
- * Enhance multiple performance sequences
- * @param {Object} performances - Named performance sequences
- * @param {number} seed - Random seed
+ * Batch process multiple performances
+ * @param {Object} performances - Map of song names to sequences
+ * @param {number} seed - Base seed
  * @returns {Object} Enhanced performances
  */
 export function enhanceAllPerformances(performances, seed = 42) {
   const enhanced = {};
+  let currentSeed = seed;
   
-  for (const [name, sequence] of Object.entries(performances)) {
-    enhanced[name] = enhancePerformance(sequence, seed + name.charCodeAt(0));
+  for (const [song, sequence] of Object.entries(performances)) {
+    enhanced[song] = enhancePerformance(sequence, currentSeed);
+    currentSeed += 137; // Prime offset for variety
   }
   
   return enhanced;
