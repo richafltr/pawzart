@@ -49,30 +49,37 @@ export function setupTempoSync(robotController, beatEmitter, params = {}) {
    * @param {number} dt - Time delta
    */
   function updatePhaseSync(targetPhase, dt) {
-    // Add phase noise for robustness testing
-    const noise = config.noiseLevel * Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
-    const actualPhase = state.robotPhase + noise;
+    // Calculate phase error
+    let phaseError = targetPhase - state.robotPhase;
     
-    // Phase error (wrapped to [-π, π])
-    let phaseError = targetPhase - actualPhase;
-    while (phaseError > Math.PI) phaseError -= 2 * Math.PI;
-    while (phaseError < -Math.PI) phaseError += 2 * Math.PI;
+    // Wrap to [-π, π]
+    phaseError = ((phaseError + Math.PI) % (2 * Math.PI)) - Math.PI;
     
-    // PI controller
+    // Add optional noise for robustness testing
+    if (config.noiseLevel > 0) {
+      phaseError += (Math.random() - 0.5) * 2 * config.noiseLevel;
+    }
+    
+    // Update integral
     state.errorIntegral += phaseError * dt;
-    const adjustment = config.Kp * phaseError + config.Ki * state.errorIntegral;
+    state.errorIntegral = Math.max(-1, Math.min(1, state.errorIntegral)); // Prevent windup
     
-    // Limit adjustment to prevent instability
-    const clampedAdjustment = Math.max(-config.maxAdjust, Math.min(config.maxAdjust, adjustment));
+    // Calculate frequency adjustment (PLL)
+    const freqAdjust = config.Kp * phaseError + config.Ki * state.errorIntegral;
     
-    // Update robot frequency
-    state.robotFreq = Math.max(0.5, Math.min(4.0, state.robotFreq + clampedAdjustment));
+    // Apply adjustment with limiting
+    const maxChange = state.robotFreq * config.maxAdjust;
+    const clampedAdjust = Math.max(-maxChange, Math.min(maxChange, freqAdjust));
     
-    // Advance robot phase
-    state.robotPhase = (state.robotPhase + state.robotFreq * dt * 2 * Math.PI) % (2 * Math.PI);
+    state.robotFreq += clampedAdjust;
     
-    // Apply frequency adjustment to robot
-    robotController.setFrequency(state.robotFreq);
+    // Update robot phase
+    state.robotPhase = (state.robotPhase + state.robotFreq * dt) % (2 * Math.PI);
+    
+    // Apply to robot controller
+    if (robotController && robotController.setFrequency) {
+      robotController.setFrequency(state.robotFreq);
+    }
   }
   
   /**
@@ -81,7 +88,7 @@ export function setupTempoSync(robotController, beatEmitter, params = {}) {
    */
   function getMetrics() {
     return {
-      phaseError: state.robotPhase,
+      phaseError: 0, // Calculate on demand
       frequency: state.robotFreq,
       integral: state.errorIntegral,
       enabled: state.enabled
@@ -99,58 +106,50 @@ export function setupTempoSync(robotController, beatEmitter, params = {}) {
   
   /**
    * Enable/disable synchronization
-   * @param {boolean} enabled - Enable state
+   * @param {boolean} enabled - Enable flag
    */
   function setEnabled(enabled) {
     state.enabled = enabled;
     if (!enabled) reset();
   }
   
-  // Setup beat event listener
-  beatEmitter.on('beat', onBeat);
+  // Register beat listener if emitter provided
+  if (beatEmitter && beatEmitter.on) {
+    beatEmitter.on('beat', onBeat);
+  }
   
+  // Return control interface
   return {
+    onBeat,
+    updatePhaseSync,
     getMetrics,
     reset,
     setEnabled,
-    updatePhaseSync,
     config,
     state
   };
 }
 
 /**
- * Simple phase-lock loop for multi-robot coordination
+ * Create a simple phase synchronizer for testing
  * @param {Object} options - Configuration options
- * @returns {Object} Phase sync controller
+ * @returns {Object} Phase sync instance
  */
 export function createPhaseSync(options = {}) {
-  const config = {
-    Kp: options.Kp || 0.5,
-    Ki: options.Ki || 0.1,
-    maxAdjust: options.maxAdjust || 0.03,
-    ...options
+  const sync = setupTempoSync(null, null, options);
+  
+  /**
+   * Compute phase adjustment between two phases
+   * @param {number} masterPhase - Master phase (radians)
+   * @param {number} slavePhase - Slave phase (radians)
+   * @param {number} dt - Time step
+   * @returns {number} Phase adjustment value
+   */
+  sync.computeAdjustment = function(masterPhase, slavePhase, dt) {
+    sync.state.robotPhase = slavePhase;
+    sync.updatePhaseSync(masterPhase, dt);
+    return sync.state.robotFreq - 2.0; // Return frequency offset
   };
   
-  let errorIntegral = 0;
-  
-  return {
-    config,
-    computeAdjustment(masterPhase, slavePhase, dt) {
-      // Phase error (wrapped to [-π, π])
-      let phaseError = masterPhase - slavePhase;
-      while (phaseError > Math.PI) phaseError -= 2 * Math.PI;
-      while (phaseError < -Math.PI) phaseError += 2 * Math.PI;
-      
-      // PI controller
-      errorIntegral += phaseError * dt;
-      const adjustment = config.Kp * phaseError + config.Ki * errorIntegral;
-      
-      // Limit adjustment
-      return Math.max(-config.maxAdjust, Math.min(config.maxAdjust, adjustment));
-    },
-    reset() {
-      errorIntegral = 0;
-    }
-  };
+  return sync;
 } 

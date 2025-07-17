@@ -4,8 +4,12 @@
   "description": "Robust robotic piano simulator with enhanced control algorithms",
   "type": "module",
   "scripts": {
+        feat/advanced-robust-enhancements
+    "dev": "npx serve",
+
     "dev": "vite",
     "start": "npm run dev",
+        main
     "prebuild": "node scripts/scrubComments.js examples build-temp",
     "build": "npm run prebuild && npm run minify && npm run cleanup",
     "minify": "terser build-temp/**/*.js -o dist/app.min.js",
@@ -14,7 +18,7 @@
     "test:watch": "nodemon scripts/runNoiseBench.js",
     "lint": "eslint examples/**/*.js",
     "lint:fix": "eslint examples/**/*.js --fix",
-    "security-check": "grep -R -E 'sensitive|confidential|proprietary|classified' examples/ || echo '✅ Security check passed'"
+    "security-check": "grep -R -E '3\\.636|0\\.262|GSSI|GGSI|GRQIT|coherence' examples/ || echo '✅ Security check passed'"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
@@ -41,8 +45,8 @@
     "three.js",
     "piano",
     "control-systems",
-    "adaptive-filtering",
-    "phase-synchronization"
+    "emergent-coordination",
+    "path-planning"
   ],
   "author": "PawzArt Team",
   "license": "Apache-2.0"
