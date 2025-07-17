@@ -1,11 +1,12 @@
 
 import * as THREE           from 'three';
+import * as Tone            from 'tone';
 import { GUI              } from '../node_modules/three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls    } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import { DragStateManager } from './utils/DragStateManager.js';
 import  npyjs               from './utils/npy.js';
 import { key2note }         from './utils/musicUtils.js';
-import { setupGUI, downloadExampleScenesFolder, loadSceneFromURL, getPosition, getQuaternion, toMujocoPos, standardNormal } from './mujocoUtils.js';
+import { setupGUI, loadSceneFromURL, getPosition, getQuaternion, toMujocoPos, standardNormal } from './mujocoUtils.js';
 import   load_mujoco        from '../dist/mujoco_wasm.js';
 
 // 🚀 ENHANCEMENT MODULES
@@ -34,7 +35,7 @@ export class RoboPianistDemo {
 
     // Define Random State Variables
     this.params = { 
-      scene: "paws_with_piano/scene.xml",
+      scene: "unitree_go2/scene.xml",
       song: "turkish_march_actions.npy", 
       paused: false, 
       songPaused: false, 
@@ -704,24 +705,128 @@ export class RoboPianistDemo {
   }
 
   async init() {
+    console.log("Starting scene initialization...");
     // Download the the examples to MuJoCo's virtual file system
-    await downloadExampleScenesFolder(mujoco);
+    console.log("Downloading example scenes and assets...");
+    {
+      console.log("SANITY CHECK: Inlined downloadExampleScenesFolder HAS BEEN CALLED.");
+      let allFiles = [
+        // Piano with Shadow Hands
+        "piano_with_shadow_hands/f_distal_pst-927e7e0da0ee76e69c0444b22bade45ff20ab5ee.obj",
+        "piano_with_shadow_hands/f_knuckle-4e74747ced8908917157e00df691de5cfc71808c.obj",
+        "piano_with_shadow_hands/f_middle-c817011a5fccb8dac0f3201f10aa30ffa74db8b6.obj",
+        "piano_with_shadow_hands/f_proximal-2b944834ac12ce9bb152073bce3db339405bc76d.obj",
+        "piano_with_shadow_hands/forearm_0-20abf0e17ef9afc17a625f75fc0ad21f31b2ff9a.obj",
+        "piano_with_shadow_hands/forearm_1-f5b8ac92a6e1b0a6b27c50dac2004867e6c0fb5b.obj",
+        "piano_with_shadow_hands/forearm_collision-3ef43cdb2273599be12fc3270639b8782c869cb4.obj",
+        "piano_with_shadow_hands/lf_metacarpal-43a8cbd60c754686e733e10c0c28ff082b46a917.obj",
+        "piano_with_shadow_hands/palm-20de86ceb3b063e7ca1bf25fa6ddd07c068d6a70.obj",
+        "piano_with_shadow_hands/scene.xml",
+        "piano_with_shadow_hands/th_distal_pst-c003d5be2d6a841babda3d88c51010617a2ba4bb.obj",
+        "piano_with_shadow_hands/th_middle-c6937ecc6bf6b01a854aaffb71f3beeda05f8ac3.obj",
+        "piano_with_shadow_hands/th_proximal-836fc483b89bf08806ab50636ab1fe738a54406e.obj",
+        "piano_with_shadow_hands/wrist-87545134a753f219a1f55310cc200489b3a03c47.obj",
+
+        // Unitree Go2
+        "unitree_go2/scene.xml",
+        "unitree_go2/go2.xml",
+        "unitree_go2/assets/base_0.obj",
+        "unitree_go2/assets/base_1.obj",
+        "unitree_go2/assets/base_2.obj",
+        "unitree_go2/assets/base_3.obj",
+        "unitree_go2/assets/base_4.obj",
+        "unitree_go2/assets/hip_0.obj",
+        "unitree_go2/assets/hip_1.obj",
+        "unitree_go2/assets/thigh_0.obj",
+        "unitree_go2/assets/thigh_1.obj",
+        "unitree_go2/assets/thigh_mirror_0.obj",
+        "unitree_go2/assets/thigh_mirror_1.obj",
+        "unitree_go2/assets/calf_0.obj",
+        "unitree_go2/assets/calf_1.obj",
+        "unitree_go2/assets/calf_mirror_0.obj",
+        "unitree_go2/assets/calf_mirror_1.obj",
+        "unitree_go2/assets/foot.obj",
+
+        // Paws with Piano
+        "paws_with_piano/scene.xml",
+        "paws_with_piano/piano.xml",
+        "paws_with_piano/go2.xml",
+      ];
+
+      const promises = allFiles.map(async (file) => {
+        const url = `./examples/scenes/${file}`;
+        console.log(`Fetching: ${url}`);
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            console.error(`[FAIL] Fetch failed for ${file}: ${response.status} ${response.statusText}`);
+            return;
+          }
+
+          const path = `/working/${file}`;
+          const dir = path.substring(0, path.lastIndexOf('/'));
+
+          if (dir && !mujoco.FS.analyzePath(dir).exists) {
+            try {
+              mujoco.FS.mkdirTree(dir);
+            } catch (e) {
+              console.error(`[FAIL] Could not create directory ${dir}:`, e);
+              return;
+            }
+          }
+
+          if (file.endsWith(".png") || file.endsWith(".stl") || file.endsWith(".skn")) {
+            const data = await response.arrayBuffer();
+            console.log(`[ OK ] Fetched ${file}, size: ${data.byteLength} bytes. Writing to ${path}`);
+            if (data.byteLength === 0) {
+              console.warn(`[WARN] File ${file} is empty.`);
+            }
+            mujoco.FS.writeFile(path, new Uint8Array(data));
+          } else {
+            const data = await response.text();
+            console.log(`[ OK ] Fetched ${file}, size: ${data.length} chars. Writing to ${path}`);
+            if (data.length === 0) {
+              console.warn(`[WARN] File ${file} is empty.`);
+            }
+            mujoco.FS.writeFile(path, data);
+          }
+        } catch (error) {
+          console.error(`[FAIL] Unhandled error for ${file}:`, error);
+        }
+      });
+
+      await Promise.all(promises);
+    }
+    console.log("Asset download complete.");
 
     // Initialize the three.js Scene using the .xml Model from params
-    [this.model, this.state, this.simulation, this.bodies, this.lights] =
-      await loadSceneFromURL(mujoco, this.params.scene, this);
+    console.log(`Attempting to load scene: ${this.params.scene}`);
+    try {
+        [this.model, this.state, this.simulation, this.bodies, this.lights] = 
+            await loadSceneFromURL(mujoco, this.params.scene, this);
+        console.log("Scene loaded successfully.");
+    } catch (error) {
+        console.error("CRITICAL: Scene initialization failed. See error below.", error);
+        // Future enhancement: display a user-friendly error message in the UI
+        return; // Stop execution if scene loading fails
+    }
 
+    console.log("Setting up GUI...");
     this.gui = new GUI();
     setupGUI(this);
     
     // 🚀 SETUP ENHANCEMENT GUI
     this.setupEnhancementGUI();
+    console.log("GUI setup complete.");
 
+    console.log(`Loading song data: ${this.params.song}`);
     this.npyjs = new npyjs();
     this.npyjs.load("./examples/scenes/piano_with_shadow_hands/"+this.params.song, (loaded) => {
-      this.pianoControl = loaded;
-      this.controlFrameNumber = 0;
+        this.pianoControl = loaded;
+        this.controlFrameNumber = 0;
+        console.log("Song data loaded.");
     });
+    console.log("Initialization complete.");
   }
 
   onWindowResize() {

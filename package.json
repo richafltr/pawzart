@@ -4,7 +4,12 @@
   "description": "Robust robotic piano simulator with enhanced control algorithms",
   "type": "module",
   "scripts": {
+        feat/advanced-robust-enhancements
     "dev": "npx serve",
+
+    "dev": "vite",
+    "start": "npm run dev",
+        main
     "prebuild": "node scripts/scrubComments.js examples build-temp",
     "build": "npm run prebuild && npm run minify && npm run cleanup",
     "minify": "terser build-temp/**/*.js -o dist/app.min.js",
@@ -18,7 +23,8 @@
   "devDependencies": {
     "eslint": "^8.56.0",
     "nodemon": "^3.0.2",
-    "terser": "^5.26.0"
+    "terser": "^5.26.0",
+    "vite": "^5.1.4"
   },
   "dependencies": {
     "three": "^0.160.0",
